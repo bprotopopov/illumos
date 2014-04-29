@@ -25,8 +25,8 @@
  */
 
 /*
+ * Copyright (c) 2012, 2014 by Delphix. All rights reserved.
  * Copyright (c) 2013, Joyent, Inc. All rights reserved.
- * Copyright (c) 2012 by Delphix. All rights reserved.
  */
 
 #include <sys/resource.h>
@@ -964,6 +964,8 @@ static const dt_option_t _dtrace_ctoptions[] = {
 	{ "verbose", dt_opt_cflags, DTRACE_C_DIFV },
 	{ "version", dt_opt_version },
 	{ "zdefs", dt_opt_cflags, DTRACE_C_ZDEFS },
+	{ "experimental", dt_opt_cflags, DTRACE_C_EXPERIMENTAL },
+	{ "d", dt_opt_cflags, DTRACE_C_EXPERIMENTAL },
 	{ NULL }
 };
 

@@ -22,9 +22,7 @@
 
 /*
  * Copyright (c) 2003, 2010, Oracle and/or its affiliates. All rights reserved.
- */
-/*
- * Copyright (c) 2013 by Delphix. All rights reserved.
+ * Copyright (c) 2014 by Delphix. All rights reserved.
  * Copyright (c) 2013, Joyent, Inc. All rights reserved.
  */
 
@@ -321,6 +319,22 @@ if (yypcb->pcb_token != 0) {
 			yyintdecimal = 1;
 
 			return (DT_TOK_INT);
+		}
+
+<S0>while[1-9][0-9]* {
+			char *p;
+
+			errno = 0;
+			yylval.l_int = strtoull(yytext + 5, &p, 0);
+			yyintprefix = 0;
+			yyintdecimal = B_TRUE;
+
+			if (errno == ERANGE) {
+				xyerror(D_INT_OFLOW, "constant %s results in "
+				    "integer overflow\n", yytext);
+			}
+
+			return (DT_TOK_WHILE_LIMITED);
 		}
 
 <S0>{RGX_IDENT} |

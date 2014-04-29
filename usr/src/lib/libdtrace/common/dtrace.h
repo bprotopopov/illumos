@@ -25,7 +25,7 @@
  */
 
 /*
- * Copyright (c) 2013 by Delphix. All rights reserved.
+ * Copyright (c) 2014 by Delphix. All rights reserved.
  * Copyright (c) 2013, Joyent, Inc. All rights reserved.
  */
 
@@ -55,6 +55,7 @@ extern "C" {
 #define	DTRACE_VERSION	3		/* library ABI interface version */
 
 struct ps_prochandle;
+struct dt_node;
 typedef struct dtrace_hdl dtrace_hdl_t;
 typedef struct dtrace_prog dtrace_prog_t;
 typedef struct dtrace_vector dtrace_vector_t;
@@ -111,13 +112,14 @@ typedef struct dtrace_proginfo {
 #define	DTRACE_C_CPP	0x0010	/* Preprocess input file with cpp(1) utility */
 #define	DTRACE_C_KNODEF	0x0020	/* Permit unresolved kernel symbols in DIFO */
 #define	DTRACE_C_UNODEF	0x0040	/* Permit unresolved user symbols in DIFO */
-#define	DTRACE_C_PSPEC	0x0080	/* Intepret ambiguous specifiers as probes */
+#define	DTRACE_C_PSPEC	0x0080	/* Interpret ambiguous specifiers as probes */
 #define	DTRACE_C_ETAGS	0x0100	/* Prefix error messages with error tags */
 #define	DTRACE_C_ARGREF	0x0200	/* Do not require all macro args to be used */
 #define	DTRACE_C_DEFARG	0x0800	/* Use 0/"" as value for unspecified args */
 #define	DTRACE_C_NOLIBS	0x1000	/* Do not process D system libraries */
 #define	DTRACE_C_CTL	0x2000	/* Only process control directives */
-#define	DTRACE_C_MASK	0x3bff	/* mask of all valid flags to dtrace_*compile */
+#define	DTRACE_C_EXPERIMENTAL	0x4000	/* Permit experimental features */
+#define	DTRACE_C_MASK	0x7bff	/* mask of all valid flags to dtrace_*compile */
 
 extern dtrace_prog_t *dtrace_program_strcompile(dtrace_hdl_t *,
     const char *, dtrace_probespec_t, uint_t, int, char *const []);
@@ -518,6 +520,10 @@ extern int dtrace_type_strcompile(dtrace_hdl_t *,
 
 extern int dtrace_type_fcompile(dtrace_hdl_t *,
     FILE *, dtrace_typeinfo_t *);
+
+extern struct dt_node *dt_compile_experimental(dtrace_hdl_t *,
+    struct dt_node *);
+
 
 /*
  * DTrace Probe Interface

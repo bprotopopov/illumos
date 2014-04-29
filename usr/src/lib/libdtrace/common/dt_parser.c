@@ -21,8 +21,8 @@
 
 /*
  * Copyright (c) 2003, 2010, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012, 2014 by Delphix. All rights reserved.
  * Copyright (c) 2013, Joyent Inc. All rights reserved.
- * Copyright (c) 2013 by Delphix. All rights reserved.
  */
 
 /*
@@ -2137,6 +2137,28 @@ dt_node_statement(dt_node_t *expr)
 }
 
 dt_node_t *
+dt_node_if(dt_node_t *pred, dt_node_t *acts, dt_node_t *else_acts)
+{
+	dt_node_t *dnp = dt_node_alloc(DT_NODE_IF);
+	dnp->dn_conditional = pred;
+	dnp->dn_body = acts;
+	dnp->dn_alternate_body = else_acts;
+
+	return (dnp);
+}
+
+dt_node_t *
+dt_node_while(dt_node_t *pred, dt_node_t *acts, uintmax_t max_iter)
+{
+	dt_node_t *dnp = dt_node_alloc(DT_NODE_WHILE);
+	dnp->dn_conditional = pred;
+	dnp->dn_body = acts;
+	dnp->dn_max_iter = max_iter;
+
+	return (dnp);
+}
+
+dt_node_t *
 dt_node_pdesc_by_name(char *spec)
 {
 	dtrace_hdl_t *dtp = yypcb->pcb_hdl;
@@ -2205,7 +2227,6 @@ dt_node_clause(dt_node_t *pdescs, dt_node_t *pred, dt_node_t *acts)
 	dnp->dn_pred = pred;
 	dnp->dn_acts = acts;
 
-	yybegin(YYS_CLAUSE);
 	return (dnp);
 }
 
@@ -2845,8 +2866,16 @@ dt_xcook_ident(dt_node_t *dnp, dt_idhash_t *dhp, uint_t idkind, int create)
 		    dnp->dn_string, mark, name,
 		    dtrace_errmsg(dtp, dtrace_errno(dtp)));
 	} else {
-		xyerror(D_IDENT_UNDEF, "failed to resolve %s: %s\n",
-		    dnp->dn_string, dtrace_errmsg(dtp, dtrace_errno(dtp)));
+		const char *addendum = "";
+
+		if (strcmp(dnp->dn_string, "entry") == 0) {
+			addendum = ". This experimental feature may "
+			    "be enabled with the -xd flag.";
+		}
+
+		xyerror(D_IDENT_UNDEF, "failed to resolve %s: %s%s\n",
+		    dnp->dn_string, dtrace_errmsg(dtp, dtrace_errno(dtp)),
+		    addendum);
 	}
 }
 
@@ -2875,11 +2904,18 @@ dt_cook_var(dt_node_t *dnp, uint_t idflags)
 	dt_ident_t *idp = dnp->dn_ident;
 
 	if ((idflags & DT_IDFLG_REF) && dt_ident_unref(idp)) {
+		const char *addendum = "";
+
+		if (strcmp(idp->di_name, "callers") == 0) {
+			addendum = ". This experimental feature may "
+			    "be enabled with the -xd flag.";
+		}
+
 		dnerror(dnp, D_VAR_UNDEF,
-		    "%s%s has not yet been declared or assigned\n",
+		    "%s%s has not yet been declared or assigned%s\n",
 		    (idp->di_flags & DT_IDFLG_LOCAL) ? "this->" :
 		    (idp->di_flags & DT_IDFLG_TLS) ? "self->" : "",
-		    idp->di_name);
+		    idp->di_name, addendum);
 	}
 
 	dt_node_attr_assign(dnp, dt_ident_cook(dnp, idp, &dnp->dn_args));
@@ -3197,8 +3233,9 @@ dt_cook_op2(dt_node_t *dnp, uint_t idflags)
 				dt_xcook_ident(lp, dhp, idkind, B_TRUE);
 			else
 				dt_xcook_ident(lp, dhp, idp->di_kind, B_FALSE);
-		} else
+		} else {
 			lp = dnp->dn_left = dt_node_cook(lp, 0);
+		}
 
 		/*
 		 * Switch op to '+' for *(E1 + E2) array mode in these cases:
@@ -3212,10 +3249,12 @@ dt_cook_op2(dt_node_t *dnp, uint_t idflags)
 			if (lp->dn_ident->di_kind == DT_IDENT_ARRAY) {
 				if (lp->dn_args != NULL)
 					op = DT_TOK_ADD;
-			} else if (!dt_ident_unref(lp->dn_ident))
+			} else if (!dt_ident_unref(lp->dn_ident)) {
 				op = DT_TOK_ADD;
-		} else if (lp->dn_kind != DT_NODE_AGG)
+			}
+		} else if (lp->dn_kind != DT_NODE_AGG) {
 			op = DT_TOK_ADD;
+		}
 	}
 
 	switch (op) {
@@ -3639,45 +3678,34 @@ asgn_common:
 
 	case DT_TOK_PTR:
 		/*
-		 * If the left-hand side of operator -> is the name "self",
-		 * then we permit a TLS variable to be created or referenced.
+		 * If the left-hand side of operator -> is one of the
+		 * scoping keywords, permit a local or thread
+		 * variable to be created or referenced.
 		 */
-		if (lp->dn_kind == DT_NODE_IDENT &&
-		    strcmp(lp->dn_string, "self") == 0) {
-			if (rp->dn_kind != DT_NODE_VAR) {
-				dt_xcook_ident(rp, dtp->dt_tls,
-				    DT_IDENT_SCALAR, B_TRUE);
+		if (lp->dn_kind == DT_NODE_IDENT) {
+			dt_idhash_t *dhp = NULL;
+
+			if (strcmp(lp->dn_string, "self") == 0) {
+				dhp = dtp->dt_tls;
+			} else if (strcmp(lp->dn_string, "this") == 0) {
+				dhp = yypcb->pcb_locals;
 			}
+			if (dhp != NULL) {
+				if (rp->dn_kind != DT_NODE_VAR) {
+					dt_xcook_ident(rp, dhp,
+					    DT_IDENT_SCALAR, B_TRUE);
+				}
 
-			if (idflags != 0)
-				rp = dt_node_cook(rp, idflags);
+				if (idflags != 0)
+					rp = dt_node_cook(rp, idflags);
 
-			dnp->dn_right = dnp->dn_left; /* avoid freeing rp */
-			dt_node_free(dnp);
-			return (rp);
-		}
-
-		/*
-		 * If the left-hand side of operator -> is the name "this",
-		 * then we permit a local variable to be created or referenced.
-		 */
-		if (lp->dn_kind == DT_NODE_IDENT &&
-		    strcmp(lp->dn_string, "this") == 0) {
-			if (rp->dn_kind != DT_NODE_VAR) {
-				dt_xcook_ident(rp, yypcb->pcb_locals,
-				    DT_IDENT_SCALAR, B_TRUE);
+				/* avoid freeing rp */
+				dnp->dn_right = dnp->dn_left;
+				dt_node_free(dnp);
+				return (rp);
 			}
-
-			if (idflags != 0)
-				rp = dt_node_cook(rp, idflags);
-
-			dnp->dn_right = dnp->dn_left; /* avoid freeing rp */
-			dt_node_free(dnp);
-			return (rp);
 		}
-
 		/*FALLTHRU*/
-
 	case DT_TOK_DOT:
 		lp = dnp->dn_left = dt_node_cook(lp, DT_IDFLG_REF);
 
@@ -4474,6 +4502,15 @@ dt_cook_none(dt_node_t *dnp, uint_t idflags)
 	return (dnp);
 }
 
+/*ARGSUSED*/
+static dt_node_t *
+dt_cook_experimental(dt_node_t *dnp, uint_t idflags)
+{
+	dnerror(dnp, D_SYNTAX, "The experimental \"if\" or \"while\" statement "
+	    "must be enabled with -xd.");
+	return (NULL);
+}
+
 static dt_node_t *(*dt_cook_funcs[])(dt_node_t *, uint_t) = {
 	dt_cook_none,		/* DT_NODE_FREE */
 	dt_cook_none,		/* DT_NODE_INT */
@@ -4496,7 +4533,9 @@ static dt_node_t *(*dt_cook_funcs[])(dt_node_t *, uint_t) = {
 	dt_cook_xlator,		/* DT_NODE_XLATOR */
 	dt_cook_none,		/* DT_NODE_PROBE */
 	dt_cook_provider,	/* DT_NODE_PROVIDER */
-	dt_cook_none		/* DT_NODE_PROG */
+	dt_cook_none,		/* DT_NODE_PROG */
+	dt_cook_experimental,	/* DT_NODE_IF */
+	dt_cook_experimental,	/* DT_NODE_WHILE */
 };
 
 /*
@@ -4511,6 +4550,8 @@ dt_node_cook(dt_node_t *dnp, uint_t idflags)
 
 	yylineno = dnp->dn_line;
 
+	assert(dnp->dn_kind <
+	    sizeof (dt_cook_funcs) / sizeof (dt_cook_funcs[0]));
 	dnp = dt_cook_funcs[dnp->dn_kind](dnp, idflags);
 	dnp->dn_flags |= DT_NF_COOKED;
 
@@ -4572,6 +4613,18 @@ dt_node_link_free(dt_node_t **pnp)
 }
 
 dt_node_t *
+dt_node_last(dt_node_t *n)
+{
+	dt_node_t *dnp;
+
+	if (n == NULL)
+		return (NULL);
+	for (dnp = n; dnp->dn_list != NULL; dnp = dnp->dn_list)
+		continue;
+	return (dnp);
+}
+
+dt_node_t *
 dt_node_link(dt_node_t *lp, dt_node_t *rp)
 {
 	dt_node_t *dnp;
@@ -4611,6 +4664,192 @@ dt_node_diftype(dtrace_hdl_t *dtp, const dt_node_t *dnp, dtrace_diftype_t *tp)
 	    DIF_TF_BYREF : 0;
 	tp->dtdt_pad = 0;
 	tp->dtdt_size = ctf_type_size(dnp->dn_ctfp, dnp->dn_type);
+}
+
+/*
+ * Output the parse tree as D.  The "-xtree=8" flag will call this function
+ * to print out the program after any experimental D transformations
+ * have been applied (e.g. to implement "if", "callers[]", "entry_*").
+ * The resulting output can be used to understand the transformations applied
+ * by these experimental features, or to run an experimental D script on
+ * a system that does not support experimental D.
+ *
+ * Note that the output does not express precisely the same program
+ * as the input.  In particular:
+ *  - Only the clauses are output.  #pragma options, variable
+ *    declarations, etc. are excluded.
+ *  - Command argument substitution has already been done, so the output
+ *    will not contain e.g. $$1, but rather the substituted string.
+ */
+void
+dt_printd(dt_node_t *dnp, FILE *fp, int depth)
+{
+	dt_node_t *arg;
+
+	switch (dnp->dn_kind) {
+	case DT_NODE_INT:
+		(void) fprintf(fp, "0x%llx", (u_longlong_t)dnp->dn_value);
+		if (!(dnp->dn_flags & DT_NF_SIGNED))
+			(void) fprintf(fp, "u");
+		break;
+
+	case DT_NODE_STRING: {
+		char *escd = strchr2esc(dnp->dn_string, strlen(dnp->dn_string));
+		(void) fprintf(fp, "\"%s\"", escd);
+		free(escd);
+		break;
+	}
+
+	case DT_NODE_IDENT:
+		(void) fprintf(fp, "%s", dnp->dn_string);
+		break;
+
+	case DT_NODE_VAR:
+		(void) fprintf(fp, "%s%s",
+		    (dnp->dn_ident->di_flags & DT_IDFLG_LOCAL) ? "this->" :
+		    (dnp->dn_ident->di_flags & DT_IDFLG_TLS) ? "self->" : "",
+		    dnp->dn_ident->di_name);
+
+		if (dnp->dn_args != NULL) {
+			(void) fprintf(fp, "[");
+
+			for (arg = dnp->dn_args; arg != NULL;
+			    arg = arg->dn_list) {
+				dt_printd(arg, fp, 0);
+				if (arg->dn_list != NULL)
+					(void) fprintf(fp, ", ");
+			}
+
+			(void) fprintf(fp, "]");
+		}
+		break;
+
+	case DT_NODE_SYM: {
+		const dtrace_syminfo_t *dts = dnp->dn_ident->di_data;
+		(void) fprintf(fp, "%s`%s", dts->dts_object, dts->dts_name);
+		break;
+	}
+	case DT_NODE_FUNC:
+		(void) fprintf(fp, "%s(", dnp->dn_ident->di_name);
+
+		for (arg = dnp->dn_args; arg != NULL; arg = arg->dn_list) {
+			dt_printd(arg, fp, 0);
+			if (arg->dn_list != NULL)
+				(void) fprintf(fp, ", ");
+		}
+		(void) fprintf(fp, ")");
+		break;
+
+	case DT_NODE_OP1:
+		(void) fprintf(fp, "%s(", opstr(dnp->dn_op));
+		dt_printd(dnp->dn_child, fp, 0);
+		(void) fprintf(fp, ")");
+		break;
+
+	case DT_NODE_OP2:
+		(void) fprintf(fp, "(");
+		dt_printd(dnp->dn_left, fp, 0);
+		if (dnp->dn_op == DT_TOK_LPAR) {
+			(void) fprintf(fp, ")");
+			dt_printd(dnp->dn_right, fp, 0);
+			break;
+		}
+		if (dnp->dn_op == DT_TOK_PTR || dnp->dn_op == DT_TOK_DOT ||
+		    dnp->dn_op == DT_TOK_LBRAC)
+			(void) fprintf(fp, "%s", opstr(dnp->dn_op));
+		else
+			(void) fprintf(fp, " %s ", opstr(dnp->dn_op));
+		dt_printd(dnp->dn_right, fp, 0);
+		if (dnp->dn_op == DT_TOK_LBRAC) {
+			dt_node_t *ln = dnp->dn_right;
+			while (ln->dn_list != NULL) {
+				(void) fprintf(fp, ", ");
+				dt_printd(ln->dn_list, fp, depth);
+				ln = ln->dn_list;
+			}
+			(void) fprintf(fp, "]");
+		}
+		(void) fprintf(fp, ")");
+		break;
+
+	case DT_NODE_OP3:
+		(void) fprintf(fp, "(");
+		dt_printd(dnp->dn_expr, fp, 0);
+		(void) fprintf(fp, " ? ");
+		dt_printd(dnp->dn_left, fp, 0);
+		(void) fprintf(fp, " : ");
+		dt_printd(dnp->dn_right, fp, 0);
+		(void) fprintf(fp, ")");
+		break;
+
+	case DT_NODE_DEXPR:
+	case DT_NODE_DFUNC:
+		(void) fprintf(fp, "%*s", depth * 8, "");
+		dt_printd(dnp->dn_expr, fp, depth + 1);
+		(void) fprintf(fp, ";\n");
+		break;
+
+	case DT_NODE_PDESC:
+		(void) fprintf(fp, "%s:%s:%s:%s",
+		    dnp->dn_desc->dtpd_provider, dnp->dn_desc->dtpd_mod,
+		    dnp->dn_desc->dtpd_func, dnp->dn_desc->dtpd_name);
+		break;
+
+	case DT_NODE_CLAUSE:
+		for (arg = dnp->dn_pdescs; arg != NULL; arg = arg->dn_list) {
+			dt_printd(arg, fp, 0);
+			if (arg->dn_list != NULL)
+				(void) fprintf(fp, ",");
+			(void) fprintf(fp, "\n");
+		}
+
+		if (dnp->dn_pred != NULL) {
+			(void) fprintf(fp, "/");
+			dt_printd(dnp->dn_pred, fp, 0);
+			(void) fprintf(fp, "/\n");
+		}
+			(void) fprintf(fp, "{\n");
+
+		for (arg = dnp->dn_acts; arg != NULL; arg = arg->dn_list)
+			dt_printd(arg, fp, depth + 1);
+		(void) fprintf(fp, "}\n");
+		(void) fprintf(fp, "\n");
+		break;
+
+	case DT_NODE_IF:
+		(void) fprintf(fp, "%*sif (", depth * 8, "");
+		dt_printd(dnp->dn_conditional, fp, 0);
+		(void) fprintf(fp, ") {\n");
+
+		for (arg = dnp->dn_body; arg != NULL; arg = arg->dn_list)
+			dt_printd(arg, fp, depth + 1);
+		if (dnp->dn_alternate_body == NULL) {
+			(void) fprintf(fp, "%*s}\n", depth * 8, "");
+		} else {
+			(void) fprintf(fp, "%*s} else {\n", depth * 8, "");
+			for (arg = dnp->dn_alternate_body; arg != NULL;
+			    arg = arg->dn_list)
+				dt_printd(arg, fp, depth + 1);
+			(void) fprintf(fp, "%*s}\n", depth * 8, "");
+		}
+
+		break;
+
+	case DT_NODE_WHILE:
+		(void) fprintf(fp, "%*swhile%d (",
+		    depth * 8, "", dnp->dn_max_iter);
+		dt_printd(dnp->dn_conditional, fp, 0);
+		(void) fprintf(fp, ") {\n");
+		for (arg = dnp->dn_body; arg != NULL; arg = arg->dn_list)
+			dt_printd(arg, fp, depth + 1);
+		(void) fprintf(fp, "%*s}\n", depth * 8, "");
+
+		break;
+
+	default:
+		(void) fprintf(fp, "/* bad node %p, kind %d */\n",
+		    (void *)dnp, dnp->dn_kind);
+	}
 }
 
 void
@@ -4723,6 +4962,13 @@ dt_node_printr(dt_node_t *dnp, FILE *fp, int depth)
 		(void) fprintf(fp, "OP2 %s (%s)\n", opstr(dnp->dn_op), buf);
 		dt_node_printr(dnp->dn_left, fp, depth + 1);
 		dt_node_printr(dnp->dn_right, fp, depth + 1);
+		if (dnp->dn_op == DT_TOK_LBRAC) {
+			dt_node_t *ln = dnp->dn_right;
+			while (ln->dn_list != NULL) {
+				dt_node_printr(ln->dn_list, fp, depth + 1);
+				ln = ln->dn_list;
+			}
+		}
 		break;
 
 	case DT_NODE_OP3:
@@ -4784,6 +5030,7 @@ dt_node_printr(dt_node_t *dnp, FILE *fp, int depth)
 
 		for (arg = dnp->dn_acts; arg != NULL; arg = arg->dn_list)
 			dt_node_printr(arg, fp, depth + 1);
+		(void) fprintf(fp, "\n");
 		break;
 
 	case DT_NODE_INLINE:
@@ -4831,6 +5078,35 @@ dt_node_printr(dt_node_t *dnp, FILE *fp, int depth)
 	case DT_NODE_PROG:
 		(void) fprintf(fp, "PROGRAM attr=%s\n", a);
 		for (arg = dnp->dn_list; arg != NULL; arg = arg->dn_list)
+			dt_node_printr(arg, fp, depth + 1);
+		break;
+
+	case DT_NODE_IF:
+		(void) fprintf(fp, "IF attr=%s CONDITION:\n", a);
+
+		dt_node_printr(dnp->dn_conditional, fp, depth + 1);
+
+		(void) fprintf(fp, "%*sIF BODY: \n", depth * 2, "");
+		for (arg = dnp->dn_body; arg != NULL; arg = arg->dn_list)
+			dt_node_printr(arg, fp, depth + 1);
+
+		if (dnp->dn_alternate_body != NULL) {
+			(void) fprintf(fp, "%*sIF ELSE: \n", depth * 2, "");
+			for (arg = dnp->dn_alternate_body; arg != NULL;
+			    arg = arg->dn_list)
+				dt_node_printr(arg, fp, depth + 1);
+		}
+
+		break;
+
+	case DT_NODE_WHILE:
+		(void) fprintf(fp, "WHILE max_iter=%u attr=%s CONDITION:\n",
+		    dnp->dn_max_iter, a);
+
+		dt_node_printr(dnp->dn_conditional, fp, depth + 1);
+
+		(void) fprintf(fp, "%*sWHILE BODY: \n", depth * 2, "");
+		for (arg = dnp->dn_body; arg != NULL; arg = arg->dn_list)
 			dt_node_printr(arg, fp, depth + 1);
 		break;
 

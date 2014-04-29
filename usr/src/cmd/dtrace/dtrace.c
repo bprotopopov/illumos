@@ -24,7 +24,7 @@
  * Use is subject to license terms.
  */
 /*
- * Copyright (c) 2012 by Delphix. All rights reserved.
+ * Copyright (c) 2012, 2014 by Delphix. All rights reserved.
  * Copyright (c) 2013, Joyent, Inc. All rights reserved.
  */
 
@@ -705,10 +705,20 @@ list_prog(const dtrace_cmd_t *dcp)
 	    (dtrace_stmt_f *)list_stmt, &last);
 }
 
+static boolean_t
+str_ends_with(const char *str, const char *suffix)
+{
+	int str_len = strlen(str);
+	int suffix_len = strlen(suffix);
+	return (str_len > suffix_len &&
+	    strcmp(str + str_len - suffix_len, suffix) == 0);
+}
+
 static void
 compile_file(dtrace_cmd_t *dcp)
 {
 	char *arg0;
+	int cflags = 0;
 	FILE *fp;
 
 	if ((fp = fopen(dcp->dc_arg, "r")) == NULL)
@@ -717,8 +727,15 @@ compile_file(dtrace_cmd_t *dcp)
 	arg0 = g_argv[0];
 	g_argv[0] = dcp->dc_arg;
 
+	/*
+	 * If the filename ends with ".xd", enable experimental
+	 * D language features.
+	 */
+	if (str_ends_with(dcp->dc_arg, ".xd"))
+		cflags |= DTRACE_C_EXPERIMENTAL;
+
 	if ((dcp->dc_prog = dtrace_program_fcompile(g_dtp, fp,
-	    g_cflags, g_argc, g_argv)) == NULL)
+	    g_cflags | cflags, g_argc, g_argv)) == NULL)
 		dfatal("failed to compile script %s", dcp->dc_arg);
 
 	g_argv[0] = arg0;

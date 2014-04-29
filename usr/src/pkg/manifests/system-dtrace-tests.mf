@@ -63,6 +63,7 @@ dir path=opt/SUNWdtrt/tst/common/enum
 dir path=opt/SUNWdtrt/tst/common/env
 dir path=opt/SUNWdtrt/tst/common/error
 dir path=opt/SUNWdtrt/tst/common/exit
+dir path=opt/SUNWdtrt/tst/common/experimental
 dir path=opt/SUNWdtrt/tst/common/fbtprovider
 dir path=opt/SUNWdtrt/tst/common/funcs
 dir path=opt/SUNWdtrt/tst/common/grammar
@@ -771,6 +772,21 @@ file path=opt/SUNWdtrt/tst/common/error/tst.errorend.d mode=0444
 file path=opt/SUNWdtrt/tst/common/exit/err.D_PROTO_LEN.noarg.d mode=0444
 file path=opt/SUNWdtrt/tst/common/exit/err.exitarg1.d mode=0444
 file path=opt/SUNWdtrt/tst/common/exit/tst.basic1.d mode=0444
+file path=opt/SUNWdtrt/tst/common/experimental/err.D_IDENT_UNDEF.bad_entry.d \
+    mode=0444
+file path=opt/SUNWdtrt/tst/common/experimental/err.D_VAR_UNDEF.bad_callers.d \
+    mode=0444
+file path=opt/SUNWdtrt/tst/common/experimental/tst.else.d mode=0444
+file path=opt/SUNWdtrt/tst/common/experimental/tst.if.d mode=0444
+file path=opt/SUNWdtrt/tst/common/experimental/tst.if2.d mode=0444
+file path=opt/SUNWdtrt/tst/common/experimental/tst.if_before_after.d mode=0444
+file path=opt/SUNWdtrt/tst/common/experimental/tst.if_nested.d mode=0444
+file path=opt/SUNWdtrt/tst/common/experimental/tst.if_trailing_semicolon.d \
+    mode=0444
+file path=opt/SUNWdtrt/tst/common/experimental/tst.if_trailing_semicolon2.d \
+    mode=0444
+file path=opt/SUNWdtrt/tst/common/experimental/tst.while.d mode=0444
+file path=opt/SUNWdtrt/tst/common/experimental/tst.whilewhile.d mode=0444
 file path=opt/SUNWdtrt/tst/common/fbtprovider/err.D_PDESC_ZERO.notreturn.d \
     mode=0444
 file path=opt/SUNWdtrt/tst/common/fbtprovider/tst.basic.d mode=0444
