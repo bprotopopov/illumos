@@ -777,6 +777,16 @@ send_traverse_thread(void *arg)
 	bqueue_enqueue(&st_arg->q, data, 1);
 }
 
+static int
+fillbadblock(void *p, uint64_t size, void *private)
+{
+	int i;
+	uint64_t *x = p;
+	for (i = 0; i < size >> 3; i++)
+		x[i] = 0x2f5baddb10cULL;
+	return (0);
+}
+
 /*
  * This function actually handles figuring out what kind of record needs to be
  * dumped, reading the data (which has hopefully been prefetched), and calling
@@ -2660,16 +2670,6 @@ receive_object(struct receive_writer_arg *rwa, struct drr_object *drro,
 	}
 	dmu_tx_commit(tx);
 
-	return (0);
-}
-
-static int
-fillbadblock(void *p, uint64_t size, void *private)
-{
-	int i;
-	uint64_t *x = p;
-	for (i = 0; i < size >> 3; i++)
-		x[i] = 0x2f5baddb10cULL;
 	return (0);
 }
 
