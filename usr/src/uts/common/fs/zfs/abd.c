@@ -927,7 +927,7 @@ abd_alloc_struct(int nr_pages)
 	 * that's the case.
 	 */
 	ASSERT(nr_pages * sizeof (struct scatterlist) <= PAGE_SIZE);
-#ifndef DEBUG_ABD
+#if 1
 	abd = kmem_alloc(asize, KM_PUSHPAGE);
 #else
 	abd = kmem_alloc(asize, UMEM_DEFAULT);
@@ -945,7 +945,7 @@ abd_alloc_struct(int nr_pages)
 static inline void
 abd_free_struct(abd_t *abd, int nr_pages)
 {
-#ifndef DEBUG_ABD
+#if 1
 	kmem_free(abd, sizeof (abd_t) + nr_pages*sizeof (struct scatterlist));
 #else
 	if (mprotect(abd, PAGE_SIZE, PROT_READ|PROT_WRITE) != 0) {
