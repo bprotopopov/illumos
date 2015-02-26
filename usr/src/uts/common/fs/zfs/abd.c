@@ -48,7 +48,7 @@
 struct page;
 
 #define	alloc_page(gfp) \
-	((struct page *)kmem_alloc(PAGE_SIZE, PAGE_SIZE, KM_SLEEP))
+	((struct page *)kmem_alloc(PAGE_SIZE, KM_SLEEP))
 
 #define	__free_page(page) \
 	kmem_free(page, PAGE_SIZE)
