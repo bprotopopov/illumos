@@ -48,6 +48,7 @@
 #include <sys/time.h>
 #include <sys/fs/zfs.h>
 #include <sys/zio_priority.h>
+#include <sys/abd.h>
 
 #ifdef	__cplusplus
 extern "C" {
@@ -291,7 +292,7 @@ typedef struct dmu_buf {
 	uint64_t db_object;		/* object that this buffer is part of */
 	uint64_t db_offset;		/* byte offset in this object */
 	uint64_t db_size;		/* size of buffer in bytes */
-	void *db_data;			/* data in buffer */
+	abd_t *db_data;			/* data in buffer */
 } dmu_buf_t;
 
 typedef void dmu_buf_evict_func_t(struct dmu_buf *db, void *user_ptr);
