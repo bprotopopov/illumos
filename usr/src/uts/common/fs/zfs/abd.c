@@ -112,7 +112,9 @@ sg_next(struct scatterlist *sg)
 static inline long
 schedule_timeout(long timeout)
 {
+#if 0
 	sleep(timeout);
+#endif
 	return (0);
 }
 
@@ -672,12 +674,18 @@ abd_copy_to_user_off(void *buf, abd_t *abd, size_t size,
 
 		abd_miter_map_atomic(&aiter);
 
+		ret = copyout(aiter.addr, buf, len);
+#ifdef linux
 		ret = __copy_to_user_inatomic(buf, aiter.addr, len);
+#endif
 
 		abd_miter_unmap_atomic(&aiter);
 		if (ret) {
 			abd_miter_map(&aiter);
+			ret = copyout(aiter.addr, buf, len);
+#ifdef linux
 			ret = copy_to_user(buf, aiter.addr, len);
+#endif
 			abd_miter_unmap(&aiter);
 			if (ret)
 				break;
@@ -714,12 +722,18 @@ abd_copy_from_user_off(abd_t *abd, const void *buf, size_t size,
 
 		abd_miter_map_atomic(&aiter);
 
+		ret = copyin(buf, aiter.addr, len);
+#ifdef linux
 		ret = __copy_from_user_inatomic(aiter.addr, buf, len);
+#endif
 
 		abd_miter_unmap_atomic(&aiter);
 		if (ret) {
 			abd_miter_map(&aiter);
+			ret = copyin(buf, aiter.addr, len);
+#ifdef linux
 			ret = copy_from_user(aiter.addr, buf, len);
+#endif
 			abd_miter_unmap(&aiter);
 			if (ret)
 				break;
