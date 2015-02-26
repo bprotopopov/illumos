@@ -42,8 +42,10 @@ extern "C" {
 #if 1
 #define	ARC_BUF_DATA_MAGIC 0xa7cb0fda
 
+#if 0
 #if defined(ZFS_DEBUG) && !defined(_KERNEL)
 #define	DEBUG_ABD
+#endif
 #endif
 
 typedef struct arc_buf_data {
