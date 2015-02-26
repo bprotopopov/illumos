@@ -930,7 +930,7 @@ abd_alloc_struct(int nr_pages)
 #ifndef DEBUG_ABD
 	abd = kmem_alloc(asize, KM_PUSHPAGE);
 #else
-	abd = umem_alloc_aligned(asize, PAGE_SIZE, UMEM_DEFAULT);
+	abd = kmem_alloc(asize, UMEM_DEFAULT);
 	/* deny access to padding */
 	if (mprotect(abd, PAGE_SIZE, PROT_NONE) != 0) {
 		perror("mprotect failed");
@@ -952,7 +952,7 @@ abd_free_struct(abd_t *abd, int nr_pages)
 		perror("mprotect failed");
 		ASSERT(0);
 	}
-	umem_free(abd, sizeof (abd_t) + nr_pages*sizeof (struct scatterlist));
+	kmem_free(abd, sizeof (abd_t) + nr_pages*sizeof (struct scatterlist));
 #endif
 }
 
