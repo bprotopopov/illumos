@@ -26,9 +26,10 @@
 #include <sys/abd.h>
 #include <sys/zio.h>
 #include <sys/zfs_context.h>
-#ifdef _KERNEL
 
-#else	/* _KERNEL */
+/* #ifdef _KERNEL */
+
+/* #else */	/* _KERNEL */
 
 /*
  * Userspace compatibility layer
@@ -112,7 +113,7 @@ schedule_timeout(long timeout)
 	return (0);
 }
 
-#endif	/* _KERNEL */
+/*#endif*/	/* _KERNEL */
 
 
 struct abd_miter {
