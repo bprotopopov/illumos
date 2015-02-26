@@ -41,14 +41,17 @@
 #ifndef PAGE_SIZE
 #define	PAGE_SIZE 4096
 #endif
+#ifndef PAGE_SHIFT
+#define	PAGE_SHIFT 12
+#endif
 
 struct page;
 
 #define	alloc_page(gfp) \
-	((struct page *)umem_alloc_aligned(PAGE_SIZE, PAGE_SIZE, UMEM_DEFAULT))
+	((struct page *)kmem_alloc_aligned(PAGE_SIZE, PAGE_SIZE, KM_SLEEP))
 
 #define	__free_page(page) \
-	umem_free(page, PAGE_SIZE)
+	kmem_free(page, PAGE_SIZE)
 
 /*
  * scatterlist
@@ -650,7 +653,7 @@ abd_zero_off(abd_t *abd, size_t size, size_t off)
  * @off is the offset in @abd
  */
 int
-abd_copy_to_user_off(void __user *buf, abd_t *abd, size_t size,
+abd_copy_to_user_off(void *buf, abd_t *abd, size_t size,
     size_t off)
 {
 	int ret = 0;
@@ -692,7 +695,7 @@ abd_copy_to_user_off(void __user *buf, abd_t *abd, size_t size,
  * @off is the offset in @abd
  */
 int
-abd_copy_from_user_off(abd_t *abd, const void __user *buf, size_t size,
+abd_copy_from_user_off(abd_t *abd, const void *buf, size_t size,
     size_t off)
 {
 	int ret = 0;
@@ -841,6 +844,7 @@ abd_uiocopy_off(abd_t *abd, size_t n, enum uio_rw rw, uio_t *uio,
 	return (0);
 }
 
+#ifdef linux
 /*
  * bio_map for scatter ABD.
  * @off is the offset in @abd
@@ -895,6 +899,7 @@ abd_bio_nr_pages_off(abd_t *abd, unsigned int bio_size, size_t off)
 		pos = abd->abd_offset + off;
 	return ((pos + bio_size + PAGE_SIZE-1)>>PAGE_SHIFT)-(pos>>PAGE_SHIFT);
 }
+#endif
 #endif	/* _KERNEL */
 
 static inline abd_t *
