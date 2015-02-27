@@ -97,10 +97,6 @@ sg_next(struct scatterlist *sg)
 #define	DIV_ROUND_UP(n, d)		(((n) + (d) - 1) / (d))
 #endif
 
-#ifndef unlikely
-#define	unlikely(x)			(x)
-#endif
-
 #define	kmap(page)			((void *)page)
 #define	kunmap(page)			do { } while (0)
 #define	zfs_kmap_atomic(page, type)	((void *)page)
@@ -1053,7 +1049,7 @@ abd_alloc_scatter(size_t size)
 	for (i = 0; i < n; i++) {
 retry:
 		page = alloc_page(GFP_NOIO|__GFP_HIGHMEM);
-		if (unlikely(page == NULL)) {
+		if (page == NULL) {
 			set_current_state(TASK_INTERRUPTIBLE);
 			schedule_timeout(1);
 			goto retry;
