@@ -460,7 +460,7 @@ static const zio_vsd_ops_t vdev_raidz_vsd_ops = {
  * the number of children in the target vdev.
  */
 static raidz_map_t *
-vdev_raidz_map_alloc(caddr_t data, uint64_t size, uint64_t offset,
+vdev_raidz_map_alloc(abd_t *abd, uint64_t size, uint64_t offset,
     uint64_t unit_shift, uint64_t dcols, uint64_t nparity)
 {
 	raidz_map_t *rm;
@@ -560,11 +560,11 @@ vdev_raidz_map_alloc(caddr_t data, uint64_t size, uint64_t offset,
 		rm->rm_col[c].rc_data =
 		    abd_alloc_linear(rm->rm_col[c].rc_size);
 
-	rm->rm_col[c].rc_data = abd_get_offset(zio->io_data, 0);
+	rm->rm_col[c].rc_data = abd_get_offset(abd, 0);
 	off = rm->rm_col[c].rc_size;
 
 	for (c = c + 1; c < acols; c++) {
-		rm->rm_col[c].rc_data = abd_get_offset(zio->io_data, off);
+		rm->rm_col[c].rc_data = abd_get_offset(abd, off);
 		off += rm->rm_col[c].rc_size;
 	}
 
@@ -1773,7 +1773,9 @@ vdev_raidz_physio(vdev_t *vd, caddr_t data, size_t size,
 	 * treat the on-disk format as if the only blocks are the complete 128
 	 * KB size.
 	 */
-	rm = vdev_raidz_map_alloc(data - (offset - origoffset),
+	abd_t *abd = abd_get_from_buf(data - (offset - origoffset),
+	    SPA_OLD_MAXBLOCKSIZE);
+	rm = vdev_raidz_map_alloc(abd,
 	    SPA_OLD_MAXBLOCKSIZE, origoffset, tvd->vdev_ashift,
 	    vd->vdev_children, vd->vdev_nparity);
 
@@ -1819,6 +1821,7 @@ vdev_raidz_physio(vdev_t *vd, caddr_t data, size_t size,
 	}
 
 	vdev_raidz_map_free(rm);
+	abd_put(abd);
 #endif	/* KERNEL */
 
 	return (err);
