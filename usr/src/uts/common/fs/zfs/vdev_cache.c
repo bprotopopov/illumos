@@ -31,6 +31,7 @@
 #include <sys/vdev_impl.h>
 #include <sys/zio.h>
 #include <sys/kstat.h>
+#include <sys/abd.h>
 
 /*
  * Virtual device read-ahead caching.
