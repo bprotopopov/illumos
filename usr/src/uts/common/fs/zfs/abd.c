@@ -605,7 +605,7 @@ abd_cmp_buf_off(abd_t *abd, const void *buf, size_t size, size_t off)
 			break;
 
 		size -= len;
-		buf += len;
+		buf = (char *)buf + len;
 		abd_miter_advance(&aiter, len);
 	}
 	return (ret);
@@ -685,7 +685,7 @@ abd_copy_to_user_off(void *buf, abd_t *abd, size_t size,
 		}
 
 		size -= len;
-		buf += len;
+		buf = (char *)buf + len;
 		abd_miter_advance(&aiter, len);
 	}
 	return (ret ? EFAULT : 0);
@@ -733,7 +733,7 @@ abd_copy_from_user_off(abd_t *abd, const void *buf, size_t size,
 		}
 
 		size -= len;
-		buf += len;
+		buf = (char *)buf + len;
 		abd_miter_advance(&aiter, len);
 	}
 	return (ret ? EFAULT : 0);
