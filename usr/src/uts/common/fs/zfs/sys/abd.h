@@ -51,7 +51,7 @@ extern "C" {
 #endif
 #endif
 
-typedef struct arc_buf_data {
+typedef struct abd {
 #ifdef DEBUG_ABD
 	char		pad[PAGE_SIZE];	/* debug, coredumps when accessed */
 #endif
