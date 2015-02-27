@@ -71,14 +71,13 @@ typedef struct arc_buf_data {
 /*
  * Convert an linear ABD to normal buffer
  */
-#define	ABD_TO_BUF(abd)					\
-(							\
-{							\
-	ASSERT((abd)->abd_magic == ARC_BUF_DATA_MAGIC);	\
-	ASSERT_ABD_LINEAR(abd);				\
-	abd->abd_buf;					\
-}							\
-)
+static inline void *
+ABD_TO_BUF(abd_t *abd)
+{
+	ASSERT((abd)->abd_magic == ARC_BUF_DATA_MAGIC);
+	ASSERT_ABD_LINEAR(abd);
+	return (abd->abd_buf);
+}
 
 #define	ABD_IS_SCATTER(abd)	(!((abd)->abd_flags & ABD_F_LINEAR))
 #define	ABD_IS_LINEAR(abd)	(!ABD_IS_SCATTER(abd))
@@ -139,53 +138,53 @@ unsigned long abd_bio_nr_pages_off(abd_t *, unsigned int, size_t);
  * Borrow a linear buffer for an ABD
  * Will allocate if ABD is scatter
  */
-#define	abd_borrow_buf(a, n)			\
-(						\
-{						\
-	void *___b;				\
-	if (ABD_IS_LINEAR(a)) {			\
-		___b = ABD_TO_BUF(a);		\
-	} else {				\
-		___b = zio_buf_alloc(n);	\
-	}					\
-	___b;					\
-}						\
-)
+static inline void *
+abd_borrow_buf(abd_t *a, size_t n)
+{
+	void *___b;
+	if (ABD_IS_LINEAR(a)) {
+		___b = ABD_TO_BUF(a);
+	} else {
+		___b = zio_buf_alloc(n);
+	}
+	return (___b);
+}
 
 /*
  * Borrow a linear buffer for an ABD
  * Will allocate and copy if ABD is scatter
  */
-#define	abd_borrow_buf_copy(a, n)		\
-(						\
-{						\
-	void *___b = abd_borrow_buf(a, n);	\
-	if (!ABD_IS_LINEAR(a))			\
-		abd_copy_to_buf(___b, a, n);	\
-	___b;					\
-}						\
-)
+static inline void *
+abd_borrow_buf_copy(abd_t *a, size_t n)
+{
+	void *___b = abd_borrow_buf(a, n);
+	if (!ABD_IS_LINEAR(a))
+		abd_copy_to_buf(___b, a, n);
+	return (___b);
+}
 
 /*
  * Return the borrowed linear buffer
  */
-#define	abd_return_buf(a, b, n)			\
-do {						\
-	if (ABD_IS_LINEAR(a))			\
-		ASSERT((b) == ABD_TO_BUF(a));	\
-	else					\
-		zio_buf_free(b, n);		\
-} while (0)
+static inline void
+abd_return_buf(abd_t *a, void *b, size_t n)
+{
+	if (ABD_IS_LINEAR(a))
+		ASSERT((b) == ABD_TO_BUF(a));
+	else
+		zio_buf_free(b, n);
+}
 
 /*
  * Copy back to ABD and return the borrowed linear buffer
  */
-#define	abd_return_buf_copy(a, b, n)		\
-do {						\
-	if (!ABD_IS_LINEAR(a))			\
-		abd_copy_from_buf(a, b, n);	\
-	abd_return_buf(a, b, n);		\
-} while (0)
+static inline void
+abd_return_buf_copy(abd_t *a, void *b, size_t n)
+{
+	if (!ABD_IS_LINEAR(a))
+		abd_copy_from_buf(a, b, n);
+	abd_return_buf(a, b, n);
+}
 
 /*
  * Wrappers for zero off functions
