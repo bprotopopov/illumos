@@ -996,7 +996,11 @@ zfs_write(vnode_t *vp, uio_t *uio, int ioflag, cred_t *cr, caller_context_t *ct)
 			 */
 			/* TODO: abd can't handle xuio */
 			if (tx_bytes < max_blksz && (!write_eof ||
+#if 1
+			    B_TRUE)) {
+#else
 			    aiov->iov_base != abuf->b_data)) {
+#endif
 				ASSERT(xuio);
 				dmu_write(zfsvfs->z_os, zp->z_id, woff,
 				    aiov->iov_len, aiov->iov_base, tx);
