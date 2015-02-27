@@ -64,7 +64,7 @@
 
 /*ARGSUSED*/
 static void
-zio_checksum_off(abd_t *abd, uint64_t size, zio_cksum_t *zcp)
+abd_checksum_off(abd_t *abd, uint64_t size, zio_cksum_t *zcp)
 {
 	ZIO_SET_CHECKSUM(zcp, 0, 0, 0, 0);
 }
