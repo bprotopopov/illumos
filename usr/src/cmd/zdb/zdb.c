@@ -879,7 +879,7 @@ print_vdev_indirect(vdev_t *vd)
 	dmu_buf_t *bonus;
 	VERIFY0(dmu_bonus_hold(vd->vdev_spa->spa_meta_objset,
 	    vis->vis_mapping_object, FTAG, &bonus));
-	vdev_indirect_mapping_phys_t *vimp = bonus->db_data;
+	vdev_indirect_mapping_phys_t *vimp = ABD_TO_BUF(bonus->db_data);
 
 	ASSERT3U(vimp->vim_count, ==, vis->vis_mapping_count);
 
