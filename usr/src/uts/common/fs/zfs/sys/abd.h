@@ -34,7 +34,8 @@
 #ifndef _ABD_H
 #define	_ABD_H
 
-#include <sys/zfs_context.h>
+#include <sys/inttypes.h>
+#include <sys/types.h>
 
 #ifdef __cplusplus
 extern "C" {
