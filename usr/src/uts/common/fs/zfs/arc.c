@@ -1440,6 +1440,34 @@ typedef struct procctl {
 	long cmd;
 	prwatch_t prwatch;
 } procctl_t;
+
+static int
+arc_abd_watch(const void *buf, uint64_t len, void *private)
+{
+	int result;
+	procctl_t ctl;
+	ctl.cmd = PCWATCH;
+	ctl.prwatch.pr_vaddr = (uintptr_t)buf;
+	ctl.prwatch.pr_size = len;
+	ctl.prwatch.pr_wflags = WA_WRITE;
+	result = write(arc_procfd, &ctl, sizeof (ctl));
+	ASSERT3U(result, ==, sizeof (ctl));
+	return (0);
+}
+
+static int
+arc_abd_unwatch(const void *buf, uint64_t len, void *private)
+{
+	int result;
+	procctl_t ctl;
+	ctl.cmd = PCWATCH;
+	ctl.prwatch.pr_vaddr = (uintptr_t)buf;
+	ctl.prwatch.pr_size = 0;
+	ctl.prwatch.pr_wflags = 0;
+	result = write(arc_procfd, &ctl, sizeof (ctl));
+	ASSERT3U(result, ==, sizeof (ctl));
+	return (0);
+}
 #endif
 
 /* ARGSUSED */
@@ -1448,7 +1476,7 @@ arc_buf_unwatch(arc_buf_t *buf)
 {
 #ifndef _KERNEL
 	if (arc_watch) {
-		abd_iterate_rfunc(buf->b_data, buf->b_hdr->b_size,
+		abd_iterate_rfunc(buf->b_data, HDR_GET_LSIZE(buf->b_hdr),
 		    arc_abd_unwatch, NULL);
 	}
 #endif
@@ -1460,7 +1488,7 @@ arc_buf_watch(arc_buf_t *buf)
 {
 #ifndef _KERNEL
 	if (arc_watch) {
-		abd_iterate_rfunc(buf->b_data, buf->b_hdr->b_size,
+		abd_iterate_rfunc(buf->b_data, HDR_GET_LSIZE(buf->b_hdr),
 		    arc_abd_watch, NULL);
 	}
 #endif
@@ -4682,36 +4710,6 @@ arc_referenced(arc_buf_t *buf)
 	mutex_exit(&buf->b_evict_lock);
 	return (referenced);
 }
-
-#ifndef _KERNEL
-static int
-arc_abd_watch(const void *buf, uint64_t len, void *private)
-{
-	int result;
-	procctl_t ctl;
-	ctl.cmd = PCWATCH;
-	ctl.prwatch.pr_vaddr = (uintptr_t)buf;
-	ctl.prwatch.pr_size = len;
-	ctl.prwatch.pr_wflags = WA_WRITE;
-	result = write(arc_procfd, &ctl, sizeof (ctl));
-	ASSERT3U(result, ==, sizeof (ctl));
-	return (0);
-}
-
-static int
-arc_abd_unwatch(const void *buf, uint64_t len, void *private)
-{
-	int result;
-	procctl_t ctl;
-	ctl.cmd = PCWATCH;
-	ctl.prwatch.pr_vaddr = (uintptr_t)buf;
-	ctl.prwatch.pr_size = 0;
-	ctl.prwatch.pr_wflags = 0;
-	result = write(arc_procfd, &ctl, sizeof (ctl));
-	ASSERT3U(result, ==, sizeof (ctl));
-	return (0);
-}
-#endif
 #endif
 
 static void
