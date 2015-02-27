@@ -27,10 +27,6 @@
 #include <sys/zio.h>
 #include <sys/zfs_context.h>
 
-/* #ifdef _KERNEL */
-
-/* #else */	/* _KERNEL */
-
 /*
  * Userspace compatibility layer
  */
@@ -113,9 +109,6 @@ schedule_timeout(long timeout)
 	return (0);
 }
 #endif
-
-/*#endif*/	/* _KERNEL */
-
 
 struct abd_miter {
 	void *addr;		/* mapped addr, adjusted by offset */
@@ -390,7 +383,7 @@ abd_iterate_func2(abd_t *dabd, abd_t *sabd, size_t dsize, size_t ssize,
 	ASSERT(ssize <= sabd->abd_size);
 
 	abd_miter_init2(&daiter, dabd, ABD_MITER_W,
-			&saiter, sabd, ABD_MITER_W);
+	    &saiter, sabd, ABD_MITER_W);
 
 	while (dsize > 0 || ssize > 0) {
 		dlen = MIN(daiter.length, dsize);
@@ -446,7 +439,7 @@ abd_copy_off(abd_t *dabd, abd_t *sabd, size_t size, size_t doff,
 	ASSERT(size <= sabd->abd_size);
 
 	abd_miter_init2(&daiter, dabd, ABD_MITER_W,
-			&saiter, sabd, ABD_MITER_R);
+	    &saiter, sabd, ABD_MITER_R);
 	abd_miter_advance(&daiter, doff);
 	abd_miter_advance(&saiter, soff);
 
@@ -548,7 +541,7 @@ abd_cmp(abd_t *dabd, abd_t *sabd, size_t size)
 	ASSERT(size <= sabd->abd_size);
 
 	abd_miter_init2(&daiter, dabd, ABD_MITER_R,
-			&saiter, sabd, ABD_MITER_R);
+	    &saiter, sabd, ABD_MITER_R);
 
 	while (size > 0) {
 		len = MIN(daiter.length, size);

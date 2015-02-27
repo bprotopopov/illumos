@@ -907,9 +907,9 @@ do_dump(dmu_sendarg_t *dsa, struct send_block_record *data)
 		}
 		if (err != 0) {
 			if (zfs_send_corrupt_data) {
-  				/* Send a block filled with 0x"zfs badd bloc" */
-  				abuf = arc_buf_alloc(spa, blksz, &abuf,
-  				    ARC_BUFC_DATA);
+				/* Send a block filled with 0x"zfs badd bloc" */
+				abuf = arc_buf_alloc(spa, blksz, &abuf,
+				    ARC_BUFC_DATA);
 
 				abd_iterate_wfunc(abuf->b_data, blksz,
 				    fillbadblock, NULL);

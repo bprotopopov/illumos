@@ -962,7 +962,7 @@ vdev_raidz_reconstruct_q(raidz_map_t *rm, int *tgts, int ntgts)
 	dst = rm->rm_col[x].rc_data;
 	exp = 255 - (rm->rm_cols - 1 - x);
 
-	rq = (struct reconst_q_struct) { ABD_TO_BUF(src), exp };
+	rq = (struct reconst_q_struct){ ABD_TO_BUF(src), exp };
 	abd_iterate_wfunc(dst, rm->rm_col[x].rc_size,
 	    vdev_raidz_reconst_q_post_func, &rq);
 
@@ -1040,7 +1040,7 @@ vdev_raidz_reconstruct_pq(raidz_map_t *rm, int *tgts, int ntgts)
 	aexp = vdev_raidz_log2[vdev_raidz_exp2(a, tmp)];
 	bexp = vdev_raidz_log2[vdev_raidz_exp2(b, tmp)];
 
-	rpq = (struct reconst_pq_struct) { p, q, pxy, qxy, aexp, bexp };
+	rpq = (struct reconst_pq_struct){ p, q, pxy, qxy, aexp, bexp };
 	abd_iterate_func2(xd, yd, xsize, ysize,
 	    vdev_raidz_reconst_pq_func, &rpq);
 
