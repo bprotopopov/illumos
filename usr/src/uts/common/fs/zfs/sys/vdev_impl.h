@@ -94,7 +94,7 @@ typedef struct vdev_ops {
  * Virtual device properties
  */
 struct vdev_cache_entry {
-	char		*ve_data;
+	abd_t		*ve_data;
 	uint64_t	ve_offset;
 	uint64_t	ve_lastused;
 	avl_node_t	ve_offset_node;
