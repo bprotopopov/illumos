@@ -32,10 +32,12 @@
 extern "C" {
 #endif
 
+struct abd;
+
 /*
  * Signature for checksum functions.
  */
-typedef void zio_checksum_func_t(abd_t *, uint64_t, zio_cksum_t *);
+typedef void zio_checksum_func_t(struct abd *, uint64_t, zio_cksum_t *);
 
 /*
  * Information about each checksum function.
@@ -63,16 +65,16 @@ extern zio_checksum_info_t zio_checksum_table[ZIO_CHECKSUM_FUNCTIONS];
  * Checksum routines.
  */
 
-extern void abd_checksum_SHA256(abd_t *, uint64_t, zio_cksum_t *);
-extern void abd_fletcher_2_native(abd_t *, uint64_t, zio_cksum_t *);
-extern void abd_fletcher_2_byteswap(abd_t *, uint64_t, zio_cksum_t *);
-extern void abd_fletcher_4_native(abd_t *, uint64_t, zio_cksum_t *);
-extern void abd_fletcher_4_byteswap(abd_t *, uint64_t, zio_cksum_t *);
+extern void abd_checksum_SHA256(struct abd *, uint64_t, zio_cksum_t *);
+extern void abd_fletcher_2_native(struct abd *, uint64_t, zio_cksum_t *);
+extern void abd_fletcher_2_byteswap(struct abd *, uint64_t, zio_cksum_t *);
+extern void abd_fletcher_4_native(struct abd *, uint64_t, zio_cksum_t *);
+extern void abd_fletcher_4_byteswap(struct abd *, uint64_t, zio_cksum_t *);
 
 extern void zio_checksum_SHA256(const void *, uint64_t, zio_cksum_t *);
 
 extern void zio_checksum_compute(zio_t *zio, enum zio_checksum checksum,
-    abd_t *data, uint64_t size);
+    struct abd *data, uint64_t size);
 extern int zio_checksum_error(zio_t *zio, zio_bad_cksum_t *out);
 extern enum zio_checksum spa_dedup_checksum(spa_t *spa);
 
