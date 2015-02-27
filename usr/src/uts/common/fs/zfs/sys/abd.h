@@ -119,7 +119,6 @@ int abd_uiocopy_off(abd_t *, size_t, enum uio_rw, uio_t *, size_t *,
 #ifdef linux
 unsigned int abd_scatter_bio_map_off(struct bio *, abd_t *, unsigned int,
     size_t);
-#endif
 unsigned long abd_bio_nr_pages_off(abd_t *, unsigned int, size_t);
 
 #define	abd_bio_map_off(bio, abd, size, off)				\
@@ -133,6 +132,7 @@ unsigned long abd_bio_nr_pages_off(abd_t *, unsigned int, size_t);
 	___ret;								\
 }									\
 )
+#endif
 #endif	/* _KERNEL */
 
 /*
