@@ -135,6 +135,39 @@ unsigned long abd_bio_nr_pages_off(abd_t *, unsigned int, size_t);
 #endif
 #endif	/* _KERNEL */
 
+
+/*
+ * Wrappers for zero off functions
+ */
+#define	abd_copy(dabd, sabd, size) \
+	abd_copy_off(dabd, sabd, size, 0, 0)
+
+#define	abd_copy_from_buf(abd, buf, size) \
+	abd_copy_from_buf_off(abd, buf, size, 0)
+
+#define	abd_copy_to_buf(buf, abd, size) \
+	abd_copy_to_buf_off(buf, abd, size, 0)
+
+#define	abd_cmp_buf(abd, buf, size) \
+	abd_cmp_buf_off(abd, buf, size, 0)
+
+#define	abd_zero(abd, size) \
+	abd_zero_off(abd, size, 0)
+
+#ifdef _KERNEL
+#define	abd_copy_to_user(buf, abd, size) \
+	abd_copy_to_user_off(buf, abd, size, 0)
+
+#define	abd_copy_from_user(abd, buf, size) \
+	abd_copy_from_user_off(abd, buf, size, 0)
+
+#define	abd_uiomove(abd, n, rw, uio) \
+	abd_uiomove_off(abd, n, rw, uio, 0)
+
+#define	abd_uiocopy(abd, n, rw, uio, c) \
+	abd_uiocopy_off(abd, n, rw, uio, c, 0)
+#endif	/* _KERNEL */
+
 /*
  * Borrow a linear buffer for an ABD
  * Will allocate if ABD is scatter
@@ -186,38 +219,6 @@ abd_return_buf_copy(abd_t *a, void *b, size_t n)
 		abd_copy_from_buf(a, b, n);
 	abd_return_buf(a, b, n);
 }
-
-/*
- * Wrappers for zero off functions
- */
-#define	abd_copy(dabd, sabd, size) \
-	abd_copy_off(dabd, sabd, size, 0, 0)
-
-#define	abd_copy_from_buf(abd, buf, size) \
-	abd_copy_from_buf_off(abd, buf, size, 0)
-
-#define	abd_copy_to_buf(buf, abd, size) \
-	abd_copy_to_buf_off(buf, abd, size, 0)
-
-#define	abd_cmp_buf(abd, buf, size) \
-	abd_cmp_buf_off(abd, buf, size, 0)
-
-#define	abd_zero(abd, size) \
-	abd_zero_off(abd, size, 0)
-
-#ifdef _KERNEL
-#define	abd_copy_to_user(buf, abd, size) \
-	abd_copy_to_user_off(buf, abd, size, 0)
-
-#define	abd_copy_from_user(abd, buf, size) \
-	abd_copy_from_user_off(abd, buf, size, 0)
-
-#define	abd_uiomove(abd, n, rw, uio) \
-	abd_uiomove_off(abd, n, rw, uio, 0)
-
-#define	abd_uiocopy(abd, n, rw, uio, c) \
-	abd_uiocopy_off(abd, n, rw, uio, c, 0)
-#endif	/* _KERNEL */
 
 #ifdef __cplusplus
 }
