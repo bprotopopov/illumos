@@ -1939,7 +1939,7 @@ arc_buf_clone(arc_buf_t *from)
 	buf->b_next = hdr->b_l1hdr.b_buf;
 	hdr->b_l1hdr.b_buf = buf;
 	arc_get_data_buf(buf);
-	abd_copy(from->b_data, buf->b_data, size);
+	abd_copy(buf->b_data, from->b_data, size);
 
 	/*
 	 * This buffer already exists in the arc so create a duplicate
