@@ -42,8 +42,6 @@
 extern "C" {
 #endif
 
-struct uio;
-
 #define	ARC_BUF_DATA_MAGIC 0xa7cb0fda
 
 #if 0
@@ -117,8 +115,8 @@ void abd_zero_off(abd_t *, size_t, size_t);
 #ifdef _KERNEL
 int abd_copy_to_user_off(void *, abd_t *, size_t, size_t);
 int abd_copy_from_user_off(abd_t *, const void *, size_t, size_t);
-int abd_uiomove_off(abd_t *, size_t, enum uio_rw, struct uio *, size_t);
-int abd_uiocopy_off(abd_t *, size_t, enum uio_rw, struct uio *, size_t *,
+int abd_uiomove_off(abd_t *, size_t, enum uio_rw, uio_t *, size_t);
+int abd_uiocopy_off(abd_t *, size_t, enum uio_rw, uio_t *, size_t *,
     size_t);
 #ifdef linux
 unsigned int abd_scatter_bio_map_off(struct bio *, abd_t *, unsigned int,
