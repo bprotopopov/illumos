@@ -152,6 +152,8 @@ static void *RDTAG = "sbd_zvol_read";
 int
 sbd_zvol_alloc_read_bufs(sbd_lu_t *sl, stmf_data_buf_t *dbuf)
 {
+	return (ENOTSUP);
+#if 0
 	sbd_zvol_io_t	*zvio = dbuf->db_lu_private;
 	rl_t 		*rl;
 	int 		numbufs, error;
@@ -210,6 +212,7 @@ sbd_zvol_alloc_read_bufs(sbd_lu_t *sl, stmf_data_buf_t *dbuf)
 
 	}
 	return (error);
+#endif
 }
 
 /*
@@ -237,6 +240,8 @@ sbd_zvol_rele_read_bufs(sbd_lu_t *sl, stmf_data_buf_t *dbuf)
 int
 sbd_zvol_alloc_write_bufs(sbd_lu_t *sl, stmf_data_buf_t *dbuf)
 {
+	return (ENOTSUP);
+#if 0
 	sbd_zvol_io_t	*zvio = dbuf->db_lu_private;
 	int		blkshift, numbufs, i;
 	uint64_t	blksize;
@@ -305,6 +310,7 @@ sbd_zvol_alloc_write_bufs(sbd_lu_t *sl, stmf_data_buf_t *dbuf)
 
 	zvio->zvio_abp = abp;
 	return (0);
+#endif
 }
 
 /*ARGSUSED*/

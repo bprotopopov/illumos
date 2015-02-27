@@ -122,7 +122,7 @@ static void sbd_handle_write_same_xfer_completion(struct scsi_task *task,
 
 #define SBD_ZCOPY_READ_ENABLED  0x1
 #define SBD_ZCOPY_WRITE_ENABLED 0x2
-uint32_t sbd_zcopy = SBD_ZCOPY_READ_ENABLED | SBD_ZCOPY_WRITE_ENABLED;
+uint32_t sbd_zcopy = 0; /*SBD_ZCOPY_READ_ENABLED | SBD_ZCOPY_WRITE_ENABLED;*/
 uint32_t sbd_max_xfer_len = 0;   /* Valid if non-zero */
 uint32_t sbd_1st_xfer_len = 0;   /* Valid if non-zero */
 uint32_t sbd_copy_threshold = 0; /* Valid if non-zero */
