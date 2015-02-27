@@ -59,10 +59,8 @@ typedef struct arc_buf_data {
 	size_t		abd_size;	/* buffer size, excluding offset */
 	size_t		abd_offset;	/* offset in the first segment */
 	int		abd_nents;	/* num of sgl entries */
-	union {
-		struct scatterlist *abd_sgl;
-		void *abd_buf;
-	};
+	struct scatterlist *abd_sgl;
+	void		*abd_buf;
 	uint64_t __abd_sgl[0];
 } abd_t;
 

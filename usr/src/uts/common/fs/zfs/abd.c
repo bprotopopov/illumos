@@ -98,21 +98,21 @@ sg_next(struct scatterlist *sg)
 #endif
 
 #define	kmap(page)			((void *)page)
-#define	kunmap(page)			do { } while (0)
+#define	kunmap(page)			((void)0)
 #define	zfs_kmap_atomic(page, type)	((void *)page)
-#define	zfs_kunmap_atomic(addr, type)	do { } while (0)
-#define	pagefault_disable()		do { } while (0)
-#define	pagefault_enable()		do { } while (0)
-#define	flush_kernel_dcache_page(page)	do { } while (0)
-#define	set_current_state(state)	do { } while (0)
+#define	zfs_kunmap_atomic(addr, type)	((void)0)
+#define	pagefault_disable()		((void)0)
+#define	pagefault_enable()		((void)0)
+#define	flush_kernel_dcache_page(page)	((void)0)
+#define	set_current_state(state)	((void)0)
+#if 0
 static inline long
 schedule_timeout(long timeout)
 {
-#if 0
 	sleep(timeout);
-#endif
 	return (0);
 }
+#endif
 
 /*#endif*/	/* _KERNEL */
 
@@ -122,10 +122,8 @@ struct abd_miter {
 	int length;		/* current segment length, adjusted by offset */
 	int offset;		/* offset in current segment */
 	int is_linear;		/* the type of the abd */
-	union {
-		struct scatterlist *sg;
-		void *buf;
-	};
+	struct scatterlist *sg;
+	void *buf;
 	int nents;		/* num of sg entries */
 	int rw;			/* r/w access, whether to flush cache */
 #ifndef HAVE_1ARG_KMAP_ATOMIC
@@ -207,7 +205,7 @@ abd_miter_map_x(struct abd_miter *aiter, int atomic)
 		else
 			paddr = kmap(sg_page(aiter->sg));
 	}
-	aiter->addr = paddr + aiter->offset;
+	aiter->addr = (char *)paddr + aiter->offset;
 }
 
 /*
@@ -219,8 +217,6 @@ abd_miter_map_x(struct abd_miter *aiter, int atomic)
 static void
 abd_miter_unmap_x(struct abd_miter *aiter, int atomic)
 {
-	void *paddr;
-
 	if (!aiter->nents)
 		return;
 
@@ -229,7 +225,6 @@ abd_miter_unmap_x(struct abd_miter *aiter, int atomic)
 	if (aiter->is_linear) {
 		pagefault_enable();
 	} else {
-		paddr = aiter->addr - aiter->offset;
 		if (atomic) {
 			if (aiter->rw == ABD_MITER_W)
 				flush_kernel_dcache_page(sg_page(aiter->sg));
@@ -301,20 +296,19 @@ abd_miter_advance(struct abd_miter *aiter, int offset)
 	return (1);
 }
 
-#define	ABD_CHECK(abd)					\
-(							\
-{							\
-	ASSERT((abd)->abd_magic == ARC_BUF_DATA_MAGIC);	\
-	ASSERT((abd)->abd_size > 0);			\
-	if (ABD_IS_LINEAR(abd)) {			\
-		ASSERT((abd)->abd_offset == 0);		\
-		ASSERT((abd)->abd_nents == 1);		\
-	} else {					\
-		ASSERT((abd)->abd_offset < PAGE_SIZE);	\
-		ASSERT((abd)->abd_nents > 0);		\
-	}						\
-}							\
-)
+static inline void
+ABD_CHECK(abd_t *abd)
+{
+	ASSERT((abd)->abd_magic == ARC_BUF_DATA_MAGIC);
+	ASSERT((abd)->abd_size > 0);
+	if (ABD_IS_LINEAR(abd)) {
+		ASSERT((abd)->abd_offset == 0);
+		ASSERT((abd)->abd_nents == 1);
+	} else {
+		ASSERT((abd)->abd_offset < PAGE_SIZE);
+		ASSERT((abd)->abd_nents > 0);
+	}
+}
 
 static void
 abd_iterate_func(abd_t *abd, size_t size,
@@ -1051,7 +1045,9 @@ retry:
 		page = alloc_page(GFP_NOIO|__GFP_HIGHMEM);
 		if (page == NULL) {
 			set_current_state(TASK_INTERRUPTIBLE);
+#if 0
 			schedule_timeout(1);
+#endif
 			goto retry;
 		}
 		sg_set_page(&abd->abd_sgl[i], page,

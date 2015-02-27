@@ -834,10 +834,12 @@ zfs_write(vnode_t *vp, uio_t *uio, int ioflag, cred_t *cr, caller_context_t *ct)
 	 * don't hold up txg.
 	 * Skip this if uio contains loaned arc_buf.
 	 */
+#if 0
 	if ((uio->uio_extflg == UIO_XUIO) &&
 	    (((xuio_t *)uio)->xu_type == UIOTYPE_ZEROCOPY))
 		xuio = (xuio_t *)uio;
 	else
+#endif
 		uio_prefaultpages(MIN(n, max_blksz), uio);
 
 	/*
@@ -905,9 +907,11 @@ zfs_write(vnode_t *vp, uio_t *uio, int ioflag, cred_t *cr, caller_context_t *ct)
 			dmu_xuio_clear(xuio, i_iov);
 			DTRACE_PROBE3(zfs_cp_write, int, i_iov,
 			    iovec_t *, aiov, arc_buf_t *, abuf);
+#if 0
 			ASSERT((aiov->iov_base == abuf->b_data) ||
 			    ((char *)aiov->iov_base - (char *)abuf->b_data +
 			    aiov->iov_len == arc_buf_size(abuf)));
+#endif
 			i_iov++;
 		} else if (abuf == NULL && n >= max_blksz &&
 		    woff >= zp->z_size &&
@@ -995,12 +999,9 @@ zfs_write(vnode_t *vp, uio_t *uio, int ioflag, cred_t *cr, caller_context_t *ct)
 			 * write via dmu_write().
 			 */
 			/* TODO: abd can't handle xuio */
+#if 0
 			if (tx_bytes < max_blksz && (!write_eof ||
-#if 1
-			    B_TRUE)) {
-#else
 			    aiov->iov_base != abuf->b_data)) {
-#endif
 				ASSERT(xuio);
 				dmu_write(zfsvfs->z_os, zp->z_id, woff,
 				    aiov->iov_len, aiov->iov_base, tx);
@@ -1011,6 +1012,7 @@ zfs_write(vnode_t *vp, uio_t *uio, int ioflag, cred_t *cr, caller_context_t *ct)
 				dmu_assign_arcbuf(sa_get_db(zp->z_sa_hdl),
 				    woff, abuf, tx);
 			}
+#endif
 			ASSERT(tx_bytes <= uio->uio_resid);
 			uioskip(uio, tx_bytes);
 		}
