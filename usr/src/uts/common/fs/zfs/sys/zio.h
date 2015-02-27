@@ -38,6 +38,7 @@
 #include <sys/fs/zfs.h>
 #include <sys/zio_impl.h>
 #include <sys/abd.h>
+#include <sys/dmu.h>
 
 #ifdef	__cplusplus
 extern "C" {
