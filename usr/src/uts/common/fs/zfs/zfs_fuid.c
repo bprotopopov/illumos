@@ -28,6 +28,7 @@
 #include <sys/zap.h>
 #include <sys/refcount.h>
 #include <sys/nvpair.h>
+#include <sys/abd.h>
 #ifdef _KERNEL
 #include <sys/kidmap.h>
 #include <sys/sid.h>
