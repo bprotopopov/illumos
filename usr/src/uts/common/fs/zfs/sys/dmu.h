@@ -48,8 +48,8 @@
 #include <sys/time.h>
 #include <sys/fs/zfs.h>
 #include <sys/zio_priority.h>
-#include <sys/abd.h>
 #include <sys/zio.h>
+#include <sys/abd.h>
 
 #ifdef	__cplusplus
 extern "C" {
