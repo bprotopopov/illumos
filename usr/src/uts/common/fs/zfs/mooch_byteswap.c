@@ -289,8 +289,8 @@ mooch_byteswap_determine(dmu_buf_t *oldbuf, dmu_buf_t *newbuf, blkptr_t *bp)
 	}
 
 	bd.bd_records = kmem_alloc(oldbuf->db_size, KM_SLEEP);
-	bd.bd_oldbuf = oldbuf->db_data;
-	bd.bd_newbuf = newbuf->db_data;
+	bd.bd_oldbuf = abd_borrow_buf_copy(oldbuf->db_data, oldbuf->db_size);
+	bd.bd_newbuf = abd_borrow_buf_copy(newbuf->db_data, newbuf->db_size);
 	bd.bd_buflen = oldbuf->db_size;
 
 	while (bd.bd_dataoff < oldbuf->db_size) {
@@ -321,6 +321,8 @@ mooch_byteswap_determine(dmu_buf_t *oldbuf, dmu_buf_t *newbuf, blkptr_t *bp)
 		atomic_add_64(&byteswap_blocks_untranslatable, 1);
 	}
 
+	abd_return_buf(oldbuf->db_data, (void *)bd.bd_oldbuf, oldbuf->db_size);
+	abd_return_buf(newbuf->db_data, (void *)bd.bd_newbuf, newbuf->db_size);
 	kmem_free(bd.bd_records, oldbuf->db_size);
 	return (error);
 }
