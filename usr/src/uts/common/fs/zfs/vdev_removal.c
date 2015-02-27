@@ -365,7 +365,8 @@ spa_remove_init(spa_t *spa)
 		VERIFY0(dmu_bonus_hold(spa->spa_meta_objset,
 		    svr->svr_vdev->vdev_indirect_state.vis_mapping_object,
 		    FTAG, &bonus_buf));
-		vdev_indirect_mapping_phys_t *vimp = bonus_buf->db_data;
+		vdev_indirect_mapping_phys_t *vimp =
+		    ABD_TO_BUF(bonus_buf->db_data);
 		svr->svr_max_synced_offset = vimp->vim_max_offset;
 		dmu_buf_rele(bonus_buf, FTAG);
 
@@ -665,7 +666,7 @@ write_indirect_birth_entry(vdev_t *vd, uint64_t max_offset, dmu_tx_t *tx)
 	    FTAG, &bonus));
 	dmu_buf_will_dirty(bonus, tx);
 
-	vdev_indirect_birth_phys_t *vib = bonus->db_data;
+	vdev_indirect_birth_phys_t *vib = ABD_TO_BUF(bonus->db_data);
 	vdev_indirect_birth_entry_phys_t vibe;
 	vibe.vibe_offset = max_offset;
 	vibe.vibe_phys_birth_txg = txg;
@@ -699,7 +700,7 @@ vdev_mapping_sync(void *arg, dmu_tx_t *tx)
 	VERIFY0(dmu_bonus_hold(spa->spa_meta_objset, vis->vis_mapping_object,
 	    FTAG, &bonus_buf));
 	dmu_buf_will_dirty(bonus_buf, tx);
-	vdev_indirect_mapping_phys_t *vimp = bonus_buf->db_data;
+	vdev_indirect_mapping_phys_t *vimp = ABD_TO_BUF(bonus_buf->db_data);
 
 	/*
 	 * Sync out new mapping entries.
@@ -1075,7 +1076,7 @@ spa_vdev_remove_thread(void *arg)
 	dmu_buf_t *bonus_buf;
 	VERIFY0(dmu_bonus_hold(spa->spa_meta_objset,
 	    vd->vdev_indirect_state.vis_mapping_object, FTAG, &bonus_buf));
-	vdev_indirect_mapping_phys_t *vimp = bonus_buf->db_data;
+	vdev_indirect_mapping_phys_t *vimp = ABD_TO_BUF(bonus_buf->db_data);
 
 	/*
 	 * Start from vim_max_offset so we pick up where we left off
