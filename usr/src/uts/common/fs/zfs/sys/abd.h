@@ -37,6 +37,7 @@
 #include <sys/inttypes.h>
 #include <sys/types.h>
 #include <sys/uio.h>
+#include <sys/zio.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -68,6 +69,11 @@ typedef struct arc_buf_data {
 #define	ABD_F_LINEAR	(0x1)
 #define	ABD_F_OWNER	(0x2)
 
+#define	ABD_IS_SCATTER(abd)	(!((abd)->abd_flags & ABD_F_LINEAR))
+#define	ABD_IS_LINEAR(abd)	(!ABD_IS_SCATTER(abd))
+#define	ASSERT_ABD_SCATTER(abd)	ASSERT(ABD_IS_SCATTER(abd))
+#define	ASSERT_ABD_LINEAR(abd)	ASSERT(ABD_IS_LINEAR(abd))
+
 /*
  * Convert an linear ABD to normal buffer
  */
@@ -78,11 +84,6 @@ ABD_TO_BUF(abd_t *abd)
 	ASSERT_ABD_LINEAR(abd);
 	return (abd->abd_buf);
 }
-
-#define	ABD_IS_SCATTER(abd)	(!((abd)->abd_flags & ABD_F_LINEAR))
-#define	ABD_IS_LINEAR(abd)	(!ABD_IS_SCATTER(abd))
-#define	ASSERT_ABD_SCATTER(abd)	ASSERT(ABD_IS_SCATTER(abd))
-#define	ASSERT_ABD_LINEAR(abd)	ASSERT(ABD_IS_LINEAR(abd))
 
 /*
  * Allocations and deallocations
