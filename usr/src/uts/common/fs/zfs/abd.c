@@ -157,12 +157,19 @@ abd_miter_init_km(struct abd_miter *aiter, abd_t *abd, int rw, int km)
 }
 
 
-#define	abd_miter_init(a, abd, rw)	abd_miter_init_km(a, abd, rw, 0)
-#define	abd_miter_init2(a, aabd, arw, b, babd, brw)	\
-do {							\
-	abd_miter_init_km(a, aabd, arw, 0);		\
-	abd_miter_init_km(b, babd, brw, 1);		\
-} while (0);
+static inline void
+abd_miter_init(struct abd_miter *a, abd_t *abd, int rw)
+{
+	abd_miter_init_km(a, abd, rw, 0);
+}
+
+static inline void
+abd_miter_init2(struct abd_miter *a, abd_t *aabd, int arw,
+    struct abd_miter *b, abd_t *babd, int brw)
+{
+	abd_miter_init_km(a, aabd, arw, 0);
+	abd_miter_init_km(b, babd, brw, 1);
+}
 
 /*
  * Map the current page in abd_miter.
@@ -239,17 +246,19 @@ abd_miter_unmap_x(struct abd_miter *aiter, int atomic)
  * Use abd_miter_{,un}map_atomic2 if you want to map 2 abd_miters.
  * You need to pass the arguments in the same order for these two.
  */
-#define	abd_miter_map_atomic2(a, b)	\
-do {					\
-	abd_miter_map_atomic(a);	\
-	abd_miter_map_atomic(b);	\
-} while (0)
+static inline void
+abd_miter_map_atomic2(struct abd_miter *a, struct abd_miter *b)
+{
+	abd_miter_map_atomic(a);
+	abd_miter_map_atomic(b);
+}
 
-#define	abd_miter_unmap_atomic2(a, b)	\
-do {					\
-	abd_miter_unmap_atomic(b);	\
-	abd_miter_unmap_atomic(a);	\
-} while (0)
+static inline void
+abd_miter_unmap_atomic2(struct abd_miter *a, struct abd_miter *b)
+{
+	abd_miter_unmap_atomic(b);
+	abd_miter_unmap_atomic(a);
+}
 
 /*
  * Advance the iterator by offset.
@@ -348,7 +357,8 @@ abd_iterate_rfunc(abd_t *abd, size_t size,
     int (*func)(const void *, uint64_t, void *), void *private)
 {
 	/* skip type checking on func */
-	abd_iterate_func(abd, size, (void *)func, private, ABD_MITER_R);
+	abd_iterate_func(abd, size,
+	    (int(*)(void *, uint64_t, void *))func, private, ABD_MITER_R);
 }
 
 /*
