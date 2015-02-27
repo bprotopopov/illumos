@@ -63,6 +63,12 @@ LDFLAGS		+= -dy -Nfs/devfs -Nmisc/dls
 INC_PATH	+= -I$(UTSBASE)/common/fs/zfs
 INC_PATH	+= -I$(UTSBASE)/common/io/bpf
 
+# lint complains about unused inline functions, even though
+# they are "inline", not "static inline", with "extern inline"
+# implementations and usage in the zfs kernel module.
+LINTFLAGS += -erroff=E_STATIC_UNUSED
+LINTFLAGS64 += -erroff=E_STATIC_UNUSED
+
 CERRWARN	+= -_gcc=-Wno-parentheses
 CERRWARN	+= -_gcc=-Wno-unused-label
 CERRWARN	+= -_gcc=-Wno-uninitialized

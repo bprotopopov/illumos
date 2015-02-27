@@ -69,6 +69,12 @@ C99LMODE=	-Xc99=%all
 #
 LINTTAGS	+= -erroff=E_BAD_PTR_CAST_ALIGN
 
+# lint complains about unused inline functions, even though
+# they are "inline", not "static inline", with "extern inline"
+# implementations and usage in the zfs kernel module.
+LINTFLAGS += -erroff=E_STATIC_UNUSED
+LINTFLAGS64 += -erroff=E_STATIC_UNUSED
+
 CERRWARN	+= -_gcc=-Wno-switch
 CERRWARN	+= -_gcc=-Wno-parentheses
 CERRWARN	+= -_gcc=-Wno-unused-label
