@@ -41,6 +41,7 @@
 #include <sys/dsl_dir.h>
 #include <sys/arc.h>
 #include <sys/zfeature.h>
+#include <sys/abd.h>
 
 /*
  * This file contains the necessary logic to remove vdevs from a

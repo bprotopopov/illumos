@@ -45,6 +45,7 @@
 #include <sys/arc.h>
 #include <sys/zil.h>
 #include <sys/dsl_scan.h>
+#include <sys/abd.h>
 
 /*
  * Virtual device management.
