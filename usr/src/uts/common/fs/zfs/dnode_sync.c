@@ -34,6 +34,7 @@
 #include <sys/spa.h>
 #include <sys/range_tree.h>
 #include <sys/zfeature.h>
+#include <sys/abd.h>
 
 static void
 dnode_increase_indirection(dnode_t *dn, dmu_tx_t *tx)
