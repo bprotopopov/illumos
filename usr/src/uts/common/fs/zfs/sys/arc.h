@@ -28,7 +28,6 @@
 #define	_SYS_ARC_H
 
 #include <sys/zfs_context.h>
-#include <sys/abd.h>
 
 #ifdef	__cplusplus
 extern "C" {
@@ -61,6 +60,7 @@ typedef struct arc_buf_hdr arc_buf_hdr_t;
 typedef struct arc_buf arc_buf_t;
 typedef void arc_done_func_t(zio_t *zio, arc_buf_t *buf, void *private);
 typedef int arc_evict_func_t(void *private);
+struct abd;
 
 /* generic arc_done_func_t's which you can use */
 arc_done_func_t arc_bcopy_func;
@@ -123,7 +123,7 @@ struct arc_buf {
 	arc_buf_hdr_t		*b_hdr;
 	arc_buf_t		*b_next;
 	kmutex_t		b_evict_lock;
-	abd_t			*b_data;
+	struct abd			*b_data;
 	arc_evict_func_t	*b_efunc;
 	void			*b_private;
 };

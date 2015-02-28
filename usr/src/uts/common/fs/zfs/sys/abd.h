@@ -62,7 +62,7 @@ typedef struct abd {
 	int		abd_nents;	/* num of sgl entries */
 	struct scatterlist *abd_sgl;
 	void		*abd_buf;
-	uint64_t __abd_sgl[0];
+	uint64_t __abd_sgl[];
 } abd_t;
 
 #define	ABD_F_SCATTER	(0x0)

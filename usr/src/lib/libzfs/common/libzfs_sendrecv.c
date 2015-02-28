@@ -3496,7 +3496,7 @@ zfs_receive_impl(libzfs_handle_t *hdl, const char *tosnap,
 		 * recv_read() above; do it again correctly.
 		 */
 		bzero(&zcksum, sizeof (zio_cksum_t));
-		fletcher_4_incremental_byteswap(&drr, sizeof (drr), &zcksum);
+		(void) fletcher_4_incremental_byteswap(&drr, sizeof (drr), &zcksum);
 		flags->byteswap = B_TRUE;
 
 		drr.drr_type = BSWAP_32(drr.drr_type);
