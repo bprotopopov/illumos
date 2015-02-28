@@ -60,7 +60,7 @@
 #include <sys/zfeature.h>
 #include <sys/mooch_byteswap.h>
 #include <sys/blkptr.h>
-#include <sys/adb.h>
+#include <sys/abd.h>
 #include <zfs_comutil.h>
 #undef ZFS_MAXNAMELEN
 #undef verify
