@@ -34,11 +34,11 @@
 #ifndef _ABD_H
 #define	_ABD_H
 
-#ifdef _KERNEL
 #include <sys/isa_defs.h>
-#include <sys/types32.h>
-#include <sys/uio.h>
+#include <sys/int_types.h>
 #include <sys/debug.h>
+#ifdef _KERNEL
+#include <sys/uio.h>
 #endif
 
 #ifdef __cplusplus
