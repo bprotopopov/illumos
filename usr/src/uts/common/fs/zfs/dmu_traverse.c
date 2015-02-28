@@ -37,6 +37,7 @@
 #include <sys/sa_impl.h>
 #include <sys/callb.h>
 #include <sys/zfeature.h>
+#include <sys/abd.h>
 
 int32_t zfs_pd_bytes_max = 50 * 1024 * 1024;	/* 50MB */
 
