@@ -41,6 +41,7 @@
 #include <sys/resource.h>
 #include <sys/zil.h>
 #include <sys/zil_impl.h>
+#include <sys/abd.h>
 
 extern uint8_t dump_opt[256];
 
