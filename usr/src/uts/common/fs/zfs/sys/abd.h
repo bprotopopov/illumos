@@ -34,9 +34,9 @@
 #ifndef _ABD_H
 #define	_ABD_H
 
-#include <sys/zfs_context.h>
-/*#include <sys/zio.h> */
 #ifdef _KERNEL
+#include <sys/isa_defs.h>
+#include <sys/types32.h>
 #include <sys/uio.h>
 #endif
 
