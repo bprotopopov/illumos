@@ -35,8 +35,10 @@
 #define	_ABD_H
 
 #include <sys/zfs_context.h>
-#include <sys/uio.h>
 #include <sys/zio.h>
+#ifdef _KERNEL
+#include <sys/uio.h>
+#endif
 
 #ifdef __cplusplus
 extern "C" {
