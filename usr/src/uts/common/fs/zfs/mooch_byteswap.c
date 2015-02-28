@@ -22,6 +22,7 @@
 #include <sys/blkptr.h>
 #include <sys/zio.h>
 #include <sys/zio_compress.h>
+#include <sys/abd.h>
 
 #include <sys/dbuf.h>
 #include <sys/dnode.h>

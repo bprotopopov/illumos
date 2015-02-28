@@ -68,6 +68,7 @@
 #include <sys/dsl_scan.h>
 #include <sys/zfeature.h>
 #include <sys/dsl_destroy.h>
+#include <sys/abd.h>
 
 #ifdef	_KERNEL
 #include <sys/bootprops.h>

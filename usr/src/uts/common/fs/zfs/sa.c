@@ -42,6 +42,7 @@
 #include <sys/dnode.h>
 #include <sys/errno.h>
 #include <sys/zfs_context.h>
+#include <sys/abd.h>
 
 /*
  * ZFS System attributes:
