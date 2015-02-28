@@ -30,6 +30,7 @@
 #include <sys/refcount.h>
 #include <sys/vdev_disk.h>
 #include <sys/vdev_impl.h>
+#include <sys/abd.h>
 #include <sys/fs/zfs.h>
 #include <sys/zio.h>
 #include <sys/sunldi.h>
