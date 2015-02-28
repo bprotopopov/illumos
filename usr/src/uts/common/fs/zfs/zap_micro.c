@@ -34,6 +34,7 @@
 #include <sys/avl.h>
 #include <sys/arc.h>
 #include <sys/dmu_objset.h>
+#include <sys/abd.h>
 
 #ifdef _KERNEL
 #include <sys/sunddi.h>

@@ -28,6 +28,7 @@
 #include <sys/sa.h>
 #include <sys/zfs_acl.h>
 #include <sys/zfs_sa.h>
+#include <sys/abd.h>
 
 /*
  * ZPL attribute registration table.
