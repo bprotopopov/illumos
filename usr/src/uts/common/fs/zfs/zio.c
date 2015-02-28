@@ -40,6 +40,7 @@
 #include <sys/blkptr.h>
 #include <sys/zfeature.h>
 #include <sys/metaslab_impl.h>
+#include <sys/abd.h>
 
 /*
  * ==========================================================================
