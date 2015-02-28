@@ -39,6 +39,7 @@
 #include <sys/zap.h>
 #include <sys/zio_checksum.h>
 #include <sys/zfs_znode.h>
+#include <sys/abd.h>
 
 struct diffarg {
 	struct vnode *da_vp;		/* file to which we are reporting */

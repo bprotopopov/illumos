@@ -35,6 +35,7 @@
 #include <sys/dnode.h>
 #include <sys/refcount.h>
 #include <sys/spa.h>
+#include <sys/abd.h>
 
 /*
  * A bptree is a queue of root block pointers from destroyed datasets. When a

@@ -131,6 +131,7 @@
 #include <sys/dsl_pool.h>
 #include <sys/zio_checksum.h>
 #include <sys/multilist.h>
+#include <sys/abd.h>
 #ifdef _KERNEL
 #include <sys/vmsystm.h>
 #include <vm/anon.h>

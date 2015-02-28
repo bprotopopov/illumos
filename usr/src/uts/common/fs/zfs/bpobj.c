@@ -29,6 +29,7 @@
 #include <sys/dsl_pool.h>
 #include <sys/zfeature.h>
 #include <sys/zap.h>
+#include <sys/abd.h>
 
 /*
  * Return an empty bpobj, preferably the empty dummy one (dp_empty_bpobj).

@@ -44,6 +44,7 @@
 #include <sys/zfeature.h>
 #include <sys/blkptr.h>
 #include <sys/range_tree.h>
+#include <sys/abd.h>
 
 /*
  * Number of times that zfs_free_range() took the slow path while doing
