@@ -34,8 +34,7 @@
 #ifndef _ABD_H
 #define	_ABD_H
 
-#include <sys/inttypes.h>
-#include <sys/types.h>
+#include <sys/zfs_context.h>
 #include <sys/uio.h>
 #include <sys/zio.h>
 
