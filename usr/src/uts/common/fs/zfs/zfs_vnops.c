@@ -65,6 +65,7 @@
 #include <sys/dbuf.h>
 #include <sys/zap.h>
 #include <sys/sa.h>
+#include <sys/abd.h>
 #include <sys/dirent.h>
 #include <sys/policy.h>
 #include <sys/sunddi.h>
