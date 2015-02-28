@@ -38,6 +38,7 @@
 #include <sys/isa_defs.h>
 #include <sys/types32.h>
 #include <sys/uio.h>
+#include <sys/debug.h>
 #endif
 
 #ifdef __cplusplus
