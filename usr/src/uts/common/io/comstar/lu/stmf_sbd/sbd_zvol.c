@@ -149,6 +149,7 @@ sbd_zvol_numsegs(sbd_lu_t *sl, uint64_t off, uint32_t len)
  */
 static void *RDTAG = "sbd_zvol_read";
 
+/* ARGSUSED */
 int
 sbd_zvol_alloc_read_bufs(sbd_lu_t *sl, stmf_data_buf_t *dbuf)
 {
@@ -237,6 +238,7 @@ sbd_zvol_rele_read_bufs(sbd_lu_t *sl, stmf_data_buf_t *dbuf)
  * The buffers will match the zvol object blocks sizes and alignments
  * such that a data copy may be avoided when the buffers are assigned.
  */
+/* ARGSUSED */
 int
 sbd_zvol_alloc_write_bufs(sbd_lu_t *sl, stmf_data_buf_t *dbuf)
 {

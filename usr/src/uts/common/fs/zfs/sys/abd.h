@@ -77,7 +77,7 @@ typedef struct abd {
 /*
  * Convert an linear ABD to normal buffer
  */
-static inline void *
+inline void *
 ABD_TO_BUF(abd_t *abd)
 {
 	ASSERT((abd)->abd_magic == ARC_BUF_DATA_MAGIC);
@@ -172,7 +172,7 @@ unsigned long abd_bio_nr_pages_off(abd_t *, unsigned int, size_t);
  * Borrow a linear buffer for an ABD
  * Will allocate if ABD is scatter
  */
-static inline void *
+inline void *
 abd_borrow_buf(abd_t *a, size_t n)
 {
 	void *___b;
@@ -188,7 +188,7 @@ abd_borrow_buf(abd_t *a, size_t n)
  * Borrow a linear buffer for an ABD
  * Will allocate and copy if ABD is scatter
  */
-static inline void *
+inline void *
 abd_borrow_buf_copy(abd_t *a, size_t n)
 {
 	void *___b = abd_borrow_buf(a, n);
@@ -200,7 +200,7 @@ abd_borrow_buf_copy(abd_t *a, size_t n)
 /*
  * Return the borrowed linear buffer
  */
-static inline void
+inline void
 abd_return_buf(abd_t *a, void *b, size_t n)
 {
 	if (ABD_IS_LINEAR(a))
@@ -212,7 +212,7 @@ abd_return_buf(abd_t *a, void *b, size_t n)
 /*
  * Copy back to ABD and return the borrowed linear buffer
  */
-static inline void
+inline void
 abd_return_buf_copy(abd_t *a, void *b, size_t n)
 {
 	if (!ABD_IS_LINEAR(a))

@@ -160,7 +160,7 @@ void
 fletcher_2_native(const void *buf, uint64_t size, zio_cksum_t *zcp)
 {
 	fletcher_2_native_init(zcp);
-	fletcher_2_incremental_native(buf, size, zcp);
+	(void) fletcher_2_incremental_native(buf, size, zcp);
 }
 
 int
@@ -191,7 +191,7 @@ void
 fletcher_2_byteswap(const void *buf, uint64_t size, zio_cksum_t *zcp)
 {
 	fletcher_2_byteswap_init(zcp);
-	fletcher_2_incremental_byteswap(buf, size, zcp);
+	(void) fletcher_2_incremental_byteswap(buf, size, zcp);
 }
 
 int

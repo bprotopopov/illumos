@@ -27,6 +27,12 @@
 #include <sys/zio.h>
 #include <sys/zfs_context.h>
 
+extern inline void *ABD_TO_BUF(abd_t *);
+extern inline void *abd_borrow_buf(abd_t *, size_t);
+extern inline void *abd_borrow_buf_copy(abd_t *, size_t);
+extern inline void abd_return_buf(abd_t *, void *, size_t);
+extern inline void abd_return_buf_copy(abd_t *, void *, size_t);
+
 /*
  * Userspace compatibility layer
  */
@@ -343,7 +349,7 @@ abd_iterate_func(abd_t *abd, size_t size,
 		if (stop)
 			break;
 		size -= len;
-		abd_miter_advance(&aiter, len);
+		(void) abd_miter_advance(&aiter, len);
 	}
 }
 
@@ -425,8 +431,8 @@ abd_iterate_func2(abd_t *dabd, abd_t *sabd, size_t dsize, size_t ssize,
 
 		dsize -= dlen;
 		ssize -= slen;
-		abd_miter_advance(&daiter, dlen);
-		abd_miter_advance(&saiter, slen);
+		(void) abd_miter_advance(&daiter, dlen);
+		(void) abd_miter_advance(&saiter, slen);
 	}
 }
 
@@ -450,8 +456,8 @@ abd_copy_off(abd_t *dabd, abd_t *sabd, size_t size, size_t doff,
 
 	abd_miter_init2(&daiter, dabd, ABD_MITER_W,
 	    &saiter, sabd, ABD_MITER_R);
-	abd_miter_advance(&daiter, doff);
-	abd_miter_advance(&saiter, soff);
+	(void) abd_miter_advance(&daiter, doff);
+	(void) abd_miter_advance(&saiter, soff);
 
 	while (size > 0) {
 		len = MIN(daiter.length, size);
@@ -465,8 +471,8 @@ abd_copy_off(abd_t *dabd, abd_t *sabd, size_t size, size_t doff,
 		abd_miter_unmap_atomic2(&daiter, &saiter);
 
 		size -= len;
-		abd_miter_advance(&daiter, len);
-		abd_miter_advance(&saiter, len);
+		(void) abd_miter_advance(&daiter, len);
+		(void) abd_miter_advance(&saiter, len);
 	}
 }
 
@@ -485,7 +491,7 @@ abd_copy_from_buf_off(abd_t *abd, const void *buf, size_t size,
 	ASSERT(size <= abd->abd_size - off);
 
 	abd_miter_init(&aiter, abd, ABD_MITER_W);
-	abd_miter_advance(&aiter, off);
+	(void) abd_miter_advance(&aiter, off);
 
 	while (size > 0) {
 		len = MIN(aiter.length, size);
@@ -498,8 +504,8 @@ abd_copy_from_buf_off(abd_t *abd, const void *buf, size_t size,
 		abd_miter_unmap_atomic(&aiter);
 
 		size -= len;
-		buf += len;
-		abd_miter_advance(&aiter, len);
+		buf = (char *)buf + len;
+		(void) abd_miter_advance(&aiter, len);
 	}
 }
 
@@ -517,7 +523,7 @@ abd_copy_to_buf_off(void *buf, abd_t *abd, size_t size, size_t off)
 	ASSERT(size <= abd->abd_size - off);
 
 	abd_miter_init(&aiter, abd, ABD_MITER_R);
-	abd_miter_advance(&aiter, off);
+	(void) abd_miter_advance(&aiter, off);
 
 	while (size > 0) {
 		len = MIN(aiter.length, size);
@@ -530,8 +536,8 @@ abd_copy_to_buf_off(void *buf, abd_t *abd, size_t size, size_t off)
 		abd_miter_unmap_atomic(&aiter);
 
 		size -= len;
-		buf += len;
-		abd_miter_advance(&aiter, len);
+		buf = (char *)buf + len;
+		(void) abd_miter_advance(&aiter, len);
 	}
 }
 
@@ -568,8 +574,8 @@ abd_cmp(abd_t *dabd, abd_t *sabd, size_t size)
 			break;
 
 		size -= len;
-		abd_miter_advance(&daiter, len);
-		abd_miter_advance(&saiter, len);
+		(void) abd_miter_advance(&daiter, len);
+		(void) abd_miter_advance(&saiter, len);
 	}
 	return (ret);
 }
@@ -589,7 +595,7 @@ abd_cmp_buf_off(abd_t *abd, const void *buf, size_t size, size_t off)
 	ASSERT(size <= abd->abd_size - off);
 
 	abd_miter_init(&aiter, abd, ABD_MITER_R);
-	abd_miter_advance(&aiter, off);
+	(void) abd_miter_advance(&aiter, off);
 
 	while (size > 0) {
 		len = MIN(aiter.length, size);
@@ -606,7 +612,7 @@ abd_cmp_buf_off(abd_t *abd, const void *buf, size_t size, size_t off)
 
 		size -= len;
 		buf = (char *)buf + len;
-		abd_miter_advance(&aiter, len);
+		(void) abd_miter_advance(&aiter, len);
 	}
 	return (ret);
 }
@@ -625,7 +631,7 @@ abd_zero_off(abd_t *abd, size_t size, size_t off)
 	ASSERT(size <= abd->abd_size - off);
 
 	abd_miter_init(&aiter, abd, ABD_MITER_W);
-	abd_miter_advance(&aiter, off);
+	(void) abd_miter_advance(&aiter, off);
 
 	while (size > 0) {
 		len = MIN(aiter.length, size);
@@ -638,7 +644,7 @@ abd_zero_off(abd_t *abd, size_t size, size_t off)
 		abd_miter_unmap_atomic(&aiter);
 
 		size -= len;
-		abd_miter_advance(&aiter, len);
+		(void) abd_miter_advance(&aiter, len);
 	}
 }
 
@@ -659,7 +665,7 @@ abd_copy_to_user_off(void *buf, abd_t *abd, size_t size,
 	ASSERT(size <= abd->abd_size - off);
 
 	abd_miter_init(&aiter, abd, ABD_MITER_R);
-	abd_miter_advance(&aiter, off);
+	(void) abd_miter_advance(&aiter, off);
 
 	while (size > 0) {
 		len = MIN(aiter.length, size);
@@ -686,7 +692,7 @@ abd_copy_to_user_off(void *buf, abd_t *abd, size_t size,
 
 		size -= len;
 		buf = (char *)buf + len;
-		abd_miter_advance(&aiter, len);
+		(void) abd_miter_advance(&aiter, len);
 	}
 	return (ret ? EFAULT : 0);
 }
@@ -707,7 +713,7 @@ abd_copy_from_user_off(abd_t *abd, const void *buf, size_t size,
 	ASSERT(size <= abd->abd_size - off);
 
 	abd_miter_init(&aiter, abd, ABD_MITER_W);
-	abd_miter_advance(&aiter, off);
+	(void) abd_miter_advance(&aiter, off);
 
 	while (size > 0) {
 		len = MIN(aiter.length, size);
@@ -734,7 +740,7 @@ abd_copy_from_user_off(abd_t *abd, const void *buf, size_t size,
 
 		size -= len;
 		buf = (char *)buf + len;
-		abd_miter_advance(&aiter, len);
+		(void) abd_miter_advance(&aiter, len);
 	}
 	return (ret ? EFAULT : 0);
 }
@@ -871,7 +877,7 @@ abd_scatter_bio_map_off(struct bio *bio, abd_t *abd, unsigned int bio_size,
 	ASSERT(bio_size <= abd->abd_size - off);
 
 	abd_miter_init(&aiter, abd, ABD_MITER_R);
-	abd_miter_advance(&aiter, off);
+	(void) abd_miter_advance(&aiter, off);
 
 	for (i = 0; i < bio->bi_max_vecs; i++) {
 		if (bio_size <= 0)
@@ -885,7 +891,7 @@ abd_scatter_bio_map_off(struct bio *bio, abd_t *abd, unsigned int bio_size,
 			break;
 
 		bio_size -= len;
-		abd_miter_advance(&aiter, len);
+		(void) abd_miter_advance(&aiter, len);
 	}
 	return (bio_size);
 }
@@ -973,7 +979,7 @@ abd_get_offset(abd_t *sabd, size_t off)
 		abd->abd_flags = ABD_F_LINEAR;
 		abd->abd_offset = 0;
 		abd->abd_nents = 1;
-		abd->abd_buf = sabd->abd_buf + off;
+		abd->abd_buf = (char *)sabd->abd_buf + off;
 	} else {
 		abd->abd_flags = ABD_F_SCATTER;
 		offset = sabd->abd_offset + off;

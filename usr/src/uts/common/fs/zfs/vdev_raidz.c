@@ -803,6 +803,7 @@ vdev_raidz_generate_parity(raidz_map_t *rm)
 	}
 }
 
+/* ARGSUSED */
 static int
 vdev_raidz_reconst_p_func(void *dbuf, void *sbuf, uint64_t dsize,
     uint64_t ssize, void *private)
@@ -819,6 +820,7 @@ vdev_raidz_reconst_p_func(void *dbuf, void *sbuf, uint64_t dsize,
 	return (0);
 }
 
+/* ARGSUSED */
 static int
 vdev_raidz_reconst_q_pre_func(void *dbuf, void *sbuf, uint64_t dsize,
     uint64_t ssize, void *private)

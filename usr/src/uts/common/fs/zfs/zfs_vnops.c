@@ -763,7 +763,9 @@ zfs_write(vnode_t *vp, uio_t *uio, int ioflag, cred_t *cr, caller_context_t *ct)
 	int		i_iov = 0;
 	int		iovcnt = uio->uio_iovcnt;
 	iovec_t		*iovp = uio->uio_iov;
+#if 0
 	int		write_eof;
+#endif
 	int		count = 0;
 	sa_bulk_attr_t	bulk[4];
 	uint64_t	mtime[2], ctime[2];
@@ -879,8 +881,10 @@ zfs_write(vnode_t *vp, uio_t *uio, int ioflag, cred_t *cr, caller_context_t *ct)
 	if ((woff + n) > limit || woff > (limit - n))
 		n = limit - woff;
 
+#if 0
 	/* Will this write extend the file length? */
 	write_eof = (woff + n > zp->z_size);
+#endif
 
 	end_size = MAX(zp->z_size, woff + n);
 
