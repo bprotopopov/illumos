@@ -51,6 +51,7 @@
 #include <sys/dsl_bookmark.h>
 #include <sys/dmu_send.h>
 #include <sys/zio_compress.h>
+#include <sys/abd.h>
 #include <zfs_fletcher.h>
 
 /*

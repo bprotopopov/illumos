@@ -43,6 +43,7 @@
 #include <sys/zfeature.h>
 #include <sys/policy.h>
 #include <sys/zfs_znode.h>
+#include <sys/abd.h>
 #include "zfs_namecheck.h"
 #include "zfs_prop.h"
 

@@ -29,6 +29,7 @@
 #include <sys/zap.h>
 #include <sys/zfs_context.h>
 #include <sys/dsl_pool.h>
+#include <sys/abd.h>
 
 /*
  * Deadlist concurrency:
