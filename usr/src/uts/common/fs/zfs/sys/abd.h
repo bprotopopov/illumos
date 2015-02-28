@@ -45,6 +45,8 @@ extern "C" {
 #endif
 
 #define	ARC_BUF_DATA_MAGIC 0xa7cb0fda
+extern void *zio_buf_alloc(size_t size);
+extern void zio_buf_free(void *buf, size_t size);
 
 #if 0
 #if defined(ZFS_DEBUG) && !defined(_KERNEL)
