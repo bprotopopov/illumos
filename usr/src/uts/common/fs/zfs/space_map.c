@@ -36,6 +36,7 @@
 #include <sys/space_map.h>
 #include <sys/refcount.h>
 #include <sys/zfeature.h>
+#include <sys/abd.h>
 
 /*
  * The data for a given space map can be kept on blocks of any size.
