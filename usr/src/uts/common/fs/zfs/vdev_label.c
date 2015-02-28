@@ -146,6 +146,7 @@
 #include <sys/metaslab_impl.h>
 #include <sys/zio.h>
 #include <sys/dsl_scan.h>
+#include <sys/abd.h>
 #include <sys/fs/zfs.h>
 
 /*

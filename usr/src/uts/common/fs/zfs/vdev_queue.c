@@ -34,6 +34,7 @@
 #include <sys/avl.h>
 #include <sys/dsl_pool.h>
 #include <sys/metaslab_impl.h>
+#include <sys/abd.h>
 
 /*
  * ZFS I/O Scheduler

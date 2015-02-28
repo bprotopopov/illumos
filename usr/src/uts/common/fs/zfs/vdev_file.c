@@ -31,6 +31,7 @@
 #include <sys/zio.h>
 #include <sys/fs/zfs.h>
 #include <sys/fm/fs/zfs.h>
+#include <sys/abd.h>
 
 /*
  * Virtual device vector for files.

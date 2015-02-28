@@ -26,6 +26,7 @@
 #include <sys/metaslab.h>
 #include <sys/refcount.h>
 #include <sys/dmu.h>
+#include <sys/abd.h>
 #include <util/bsearch.h>
 
 /*
