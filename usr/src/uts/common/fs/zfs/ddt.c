@@ -36,6 +36,7 @@
 #include <sys/zio_checksum.h>
 #include <sys/zio_compress.h>
 #include <sys/dsl_scan.h>
+#include <sys/abd.h>
 
 /*
  * Enable/disable prefetching of dedup-ed blocks which are going to be freed.
