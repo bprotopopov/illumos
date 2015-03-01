@@ -2155,8 +2155,8 @@ dbuf_prefetch_indirect_done(zio_t *zio, arc_buf_t *abuf, void *private)
 
 	uint64_t nextblkid = dpa->zb.zb_blkid >>
 	    (dpa->epbs * (dpa->curlevel - dpa->zb.zb_level));
-	blkptr_t *bp =
-	    ((blkptr_t *)abuf->b_data) + P2PHASE(nextblkid, 1ULL << dpa->epbs);
+	blkptr_t *bp = ((blkptr_t *)ABD_TO_BUF(abuf->b_data)) +
+	    P2PHASE(nextblkid, 1ULL << dpa->epbs);
 	if (BP_IS_HOLE(bp) || (zio != NULL && zio->io_error != 0)) {
 		kmem_free(dpa, sizeof (*dpa));
 	} else if (dpa->curlevel == dpa->zb.zb_level) {
