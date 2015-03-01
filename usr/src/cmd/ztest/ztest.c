@@ -1255,13 +1255,13 @@ ztest_pattern_set(abd_t *abd, uint64_t size, uint64_t value)
 
 	while (ip < ip_end)
 		*ip++ = value;
-	abd_return_buf(abd, buf, size);
+	abd_return_buf_copy(abd, buf, size);
 }
 
 static boolean_t
 ztest_pattern_match(abd_t *abd, uint64_t size, uint64_t value)
 {
-	void *buf = abd_borrow_buf(abd, size);
+	void *buf = abd_borrow_buf_copy(abd, size);
 	uint64_t *ip = buf;
 	uint64_t *ip_end = (uint64_t *)((uintptr_t)buf + (uintptr_t)size);
 	uint64_t diff = 0;
