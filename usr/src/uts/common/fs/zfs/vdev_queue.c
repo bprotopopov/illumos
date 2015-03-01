@@ -350,7 +350,7 @@ vdev_queue_agg_io_done(zio_t *aio)
 		}
 	}
 
-	zio_buf_free(aio->io_data, aio->io_size);
+	abd_free(aio->io_data, aio->io_size);
 }
 
 static int
