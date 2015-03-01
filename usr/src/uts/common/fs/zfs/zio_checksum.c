@@ -119,6 +119,7 @@ zio_checksum_info_t zio_checksum_table[ZIO_CHECKSUM_FUNCTIONS] = {
 	    1, 0, 0, "fletcher4"},
 	{{abd_checksum_SHA256,	 abd_checksum_SHA256},	   1, 0, 1, "sha256"},
 	{{abd_fletcher_4_native, abd_fletcher_4_byteswap}, 0, 1, 0, "zilog2"},
+	{{abd_checksum_off,      abd_checksum_off},        0, 0, 0, "noparity"},
 };
 
 
