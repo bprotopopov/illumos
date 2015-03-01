@@ -755,7 +755,7 @@ spa_vdev_copy_segment_write_done(zio_t *zio)
 	vdev_copy_seg_arg_t *vcsa = zio->io_private;
 	vdev_copy_arg_t *vca = vcsa->vcsa_copy_arg;
 	spa_config_exit(zio->io_spa, SCL_STATE, FTAG);
-	zio_data_buf_free(zio->io_data, zio->io_size);
+	abd_free(zio->io_data, zio->io_size);
 
 	mutex_enter(&vca->vca_lock);
 	vca->vca_outstanding_bytes -= zio->io_size;
@@ -832,7 +832,7 @@ spa_vdev_copy_segment(vdev_t *vd, uint64_t start, uint64_t size, uint64_t txg,
 
 	zio_nowait(zio_read_phys(spa->spa_txg_zio[txg & TXG_MASK],
 	    vd, start + VDEV_LABEL_START_SIZE,
-	    size, zio_data_buf_alloc(size), ZIO_CHECKSUM_OFF,
+	    size, abd_alloc_scatter(size), ZIO_CHECKSUM_OFF,
 	    spa_vdev_copy_segment_read_done, private,
 	    ZIO_PRIORITY_REMOVAL, 0, B_FALSE));
 
