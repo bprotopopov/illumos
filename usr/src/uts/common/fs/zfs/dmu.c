@@ -1079,7 +1079,10 @@ dmu_xuio_add(xuio_t *xuio, arc_buf_t *abuf, offset_t off, size_t n)
 	ASSERT(i < priv->cnt);
 	ASSERT(off + n <= arc_buf_size(abuf));
 	iov = uio->uio_iov + i;
+	ASSERT(!"notreached");
+#if 0
 	iov->iov_base = (char *)abuf->b_data + off;
+#endif
 	iov->iov_len = n;
 	priv->bufs[i] = abuf;
 	return (0);
@@ -1398,7 +1401,7 @@ dmu_write_pages(objset_t *os, uint64_t object, uint64_t offset, uint64_t size,
 			ASSERT3U(pp->p_offset, ==, db->db_offset + bufoff);
 			thiscpy = MIN(PAGESIZE, tocpy - copied);
 			va = zfs_map_page(pp, S_READ);
-			bcopy(va, (char *)db->db_data + bufoff, thiscpy);
+			abd_copy_to_buf_off(va, db->db_data, thiscpy, bufoff);
 			zfs_unmap_page(pp, va);
 			pp = pp->p_next;
 			bufoff += PAGESIZE;
