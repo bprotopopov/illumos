@@ -19,6 +19,7 @@
 # CDDL HEADER END
 #
 #
+# Copyright (c) 2015 by Delphix. All rights reserved.
 # Copyright 2012 Nexenta Systems, Inc.  All rights reserved.
 # Copyright 2010 Sun Microsystems, Inc.  All rights reserved.
 # Use is subject to license terms.

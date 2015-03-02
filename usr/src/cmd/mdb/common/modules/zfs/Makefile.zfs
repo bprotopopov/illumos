@@ -23,6 +23,8 @@
 # Copyright 2014 Spectra Logic Corporation.  All rights reserved.
 # Use is subject to license terms.
 #
+# Copyright (c) 2015 by Delphix. All rights reserved.
+#
 
 # lint complains about unused inline functions, even though
 # they are "inline", not "static inline", with "extern inline"
