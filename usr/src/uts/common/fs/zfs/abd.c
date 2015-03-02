@@ -945,7 +945,7 @@ static inline void
 abd_free_struct(abd_t *abd, int nr_pages)
 {
 #ifndef DEBUG_ABD
-	kmem_free(abd, sizeof (abd_t) + nr_pages*sizeof (struct scatterlist));
+	kmem_free(abd, sizeof (abd_t) + nr_pages * sizeof (struct scatterlist));
 #else
 	if (mprotect(abd, PAGE_SIZE, PROT_READ|PROT_WRITE) != 0) {
 		perror("mprotect failed");
