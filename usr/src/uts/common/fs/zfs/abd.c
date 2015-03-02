@@ -919,13 +919,13 @@ static inline abd_t *
 abd_alloc_struct(int nr_pages)
 {
 	abd_t *abd;
-	size_t asize = sizeof (abd_t) + nr_pages*sizeof (struct scatterlist);
+	size_t asize = sizeof (abd_t) + nr_pages * sizeof (struct scatterlist);
 	/*
 	 * If the maximum block size increases, inline sgl might not fit into
 	 * a single page. We might want to consider using chained sgl if
 	 * that's the case.
 	 */
-	ASSERT(nr_pages * sizeof (struct scatterlist) <= PAGE_SIZE);
+	/*ASSERT(nr_pages * sizeof (struct scatterlist) <= PAGE_SIZE);*/
 #ifndef DEBUG_ABD
 	abd = kmem_alloc(asize, KM_PUSHPAGE);
 #else
