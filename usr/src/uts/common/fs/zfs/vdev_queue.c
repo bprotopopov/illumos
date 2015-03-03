@@ -600,8 +600,13 @@ vdev_queue_aggregate(vdev_queue_t *vq, zio_t *zio)
 	size = IO_SPAN(first, last);
 	ASSERT3U(size, <=, zfs_vdev_aggregation_limit);
 
+	/*
+	 * Note: we use a linear abd here because vdev_disk needs to
+	 * linearize it anyway for bdev_stragegy().  If that ever changes,
+	 * it would be reasonable to change this to a scatter abd.
+	 */
 	aio = zio_vdev_delegated_io(first->io_vd, first->io_offset,
-	    abd_alloc_scatter(size), size, first->io_type, zio->io_priority,
+	    abd_alloc_linear(size), size, first->io_type, zio->io_priority,
 	    flags | ZIO_FLAG_DONT_CACHE | ZIO_FLAG_DONT_QUEUE,
 	    vdev_queue_agg_io_done, NULL);
 	aio->io_timestamp = first->io_timestamp;

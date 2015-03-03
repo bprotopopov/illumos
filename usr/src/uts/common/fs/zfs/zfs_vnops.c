@@ -764,9 +764,7 @@ zfs_write(vnode_t *vp, uio_t *uio, int ioflag, cred_t *cr, caller_context_t *ct)
 	int		i_iov = 0;
 	int		iovcnt = uio->uio_iovcnt;
 	iovec_t		*iovp = uio->uio_iov;
-#if 0
 	int		write_eof;
-#endif
 	int		count = 0;
 	sa_bulk_attr_t	bulk[4];
 	uint64_t	mtime[2], ctime[2];
@@ -882,10 +880,8 @@ zfs_write(vnode_t *vp, uio_t *uio, int ioflag, cred_t *cr, caller_context_t *ct)
 	if ((woff + n) > limit || woff > (limit - n))
 		n = limit - woff;
 
-#if 0
 	/* Will this write extend the file length? */
 	write_eof = (woff + n > zp->z_size);
-#endif
 
 	end_size = MAX(zp->z_size, woff + n);
 
@@ -1004,6 +1000,7 @@ zfs_write(vnode_t *vp, uio_t *uio, int ioflag, cred_t *cr, caller_context_t *ct)
 			 * write via dmu_write().
 			 */
 			/* TODO: abd can't handle xuio */
+			ASSERT(! (tx_bytes < max_blksz && (!write_eof)));
 #if 0
 			if (tx_bytes < max_blksz && (!write_eof ||
 			    aiov->iov_base != abuf->b_data)) {
@@ -1013,9 +1010,11 @@ zfs_write(vnode_t *vp, uio_t *uio, int ioflag, cred_t *cr, caller_context_t *ct)
 				dmu_return_arcbuf(abuf);
 				xuio_stat_wbuf_copied();
 			} else {
+#endif
 				ASSERT(xuio || tx_bytes == max_blksz);
 				dmu_assign_arcbuf(sa_get_db(zp->z_sa_hdl),
 				    woff, abuf, tx);
+#if 0
 			}
 #endif
 			ASSERT(tx_bytes <= uio->uio_resid);
