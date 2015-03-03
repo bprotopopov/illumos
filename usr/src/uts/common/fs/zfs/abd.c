@@ -62,13 +62,13 @@ struct page;
 struct scatterlist {
 	struct page *page;
 	int length;
-	int end;
+	boolean_t last;
 };
 
 static void
 sg_init_table(struct scatterlist *sg, int nr) {
 	memset(sg, 0, nr * sizeof (struct scatterlist));
-	sg[nr - 1].end = 1;
+	sg[nr - 1].last = B_TRUE;
 }
 
 static inline void
@@ -88,7 +88,7 @@ sg_page(struct scatterlist *sg) {
 static inline struct scatterlist *
 sg_next(struct scatterlist *sg)
 {
-	if (sg->end)
+	if (sg->last)
 		return (NULL);
 	return (sg + 1);
 }
@@ -556,6 +556,8 @@ abd_cmp(abd_t *dabd, abd_t *sabd, size_t size)
 	ABD_CHECK(sabd);
 	ASSERT(size <= dabd->abd_size);
 	ASSERT(size <= sabd->abd_size);
+	ASSERT3U(dabd->abd_size, ==, size);
+	ASSERT3U(sabd->abd_size, ==, size);
 
 	abd_miter_init2(&daiter, dabd, ABD_MITER_R,
 	    &saiter, sabd, ABD_MITER_R);
@@ -655,8 +657,7 @@ abd_zero_off(abd_t *abd, size_t size, size_t off)
  * @off is the offset in @abd
  */
 int
-abd_copy_to_user_off(void *buf, abd_t *abd, size_t size,
-    size_t off)
+abd_copy_to_user_off(void *buf, abd_t *abd, size_t size, size_t off)
 {
 	int ret = 0;
 	size_t len;
@@ -703,8 +704,7 @@ abd_copy_to_user_off(void *buf, abd_t *abd, size_t size,
  * @off is the offset in @abd
  */
 int
-abd_copy_from_user_off(abd_t *abd, const void *buf, size_t size,
-    size_t off)
+abd_copy_from_user_off(abd_t *abd, const void *buf, size_t size, size_t off)
 {
 	int ret = 0;
 	size_t len;
@@ -1093,6 +1093,7 @@ abd_free_scatter(abd_t *abd, size_t size)
 {
 	int i, n;
 	struct page *page;
+	ASSERT3U(abd->abd_size, ==, size);
 
 	ASSERT(abd->abd_sgl == (struct scatterlist *)&abd->__abd_sgl[0]);
 	ASSERT(abd->abd_size == size);
@@ -1111,6 +1112,7 @@ abd_free_scatter(abd_t *abd, size_t size)
 static void
 abd_free_linear(abd_t *abd, size_t size)
 {
+	ASSERT3U(abd->abd_size, ==, size);
 	abd->abd_magic = 0;
 	zio_buf_free(abd->abd_buf, size);
 	abd_free_struct(abd, 0);
@@ -1125,6 +1127,7 @@ abd_free(abd_t *abd, size_t size)
 {
 	ABD_CHECK(abd);
 	ASSERT(abd->abd_flags & ABD_F_OWNER);
+	ASSERT3U(abd->abd_size, ==, size);
 	if (ABD_IS_LINEAR(abd))
 		abd_free_linear(abd, size);
 	else
