@@ -3561,7 +3561,7 @@ zio_done(zio_t *zio)
 			zio_cksum_report_t *zcr = zio->io_cksum_report;
 			uint64_t align = zcr->zcr_align;
 			uint64_t asize = P2ROUNDUP(psize, align);
-			char *abuf;
+			char *abuf = NULL;
 			abd_t *adata = zio->io_data;
 
 			if (asize != psize) {
@@ -3573,7 +3573,8 @@ zio_done(zio_t *zio)
 				abd_zero_off(adata, asize - psize, psize);
 			}
 
-			abuf = abd_borrow_buf_copy(adata, asize);
+			if (adata != NULL)
+				abuf = abd_borrow_buf_copy(adata, asize);
 
 			zio->io_cksum_report = zcr->zcr_next;
 			zcr->zcr_next = NULL;
