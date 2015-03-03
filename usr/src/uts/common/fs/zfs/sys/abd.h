@@ -181,7 +181,7 @@ inline void *
 abd_borrow_buf(abd_t *a, size_t n)
 {
 	void *___b;
-	ASSERT3U(a->abd_size, ==, n);
+	ASSERT3U(a->abd_size, >=, n);
 	if (ABD_IS_LINEAR(a)) {
 		___b = ABD_TO_BUF(a);
 	} else {
@@ -195,13 +195,20 @@ abd_borrow_buf(abd_t *a, size_t n)
  * Will allocate and copy if ABD is scatter
  */
 inline void *
-abd_borrow_buf_copy(abd_t *a, size_t n)
+abd_borrow_buf_copy_len(abd_t *a, size_t n)
 {
-	ASSERT3U(a->abd_size, ==, n);
+	ASSERT3U(a->abd_size, >=, n);
 	void *___b = abd_borrow_buf(a, n);
 	if (!ABD_IS_LINEAR(a))
 		abd_copy_to_buf(___b, a, n);
 	return (___b);
+}
+
+inline void *
+abd_borrow_buf_copy(abd_t *a, size_t n)
+{
+	ASSERT3U(a->abd_size, ==, n);
+	return (abd_borrow_buf_copy_len(a, a->abd_size));
 }
 
 /*
@@ -210,7 +217,7 @@ abd_borrow_buf_copy(abd_t *a, size_t n)
 inline void
 abd_return_buf(abd_t *a, void *b, size_t n)
 {
-	ASSERT3U(a->abd_size, ==, n);
+	ASSERT3U(a->abd_size, >=, n);
 	if (ABD_IS_LINEAR(a))
 		ASSERT((b) == ABD_TO_BUF(a));
 	else
@@ -221,12 +228,19 @@ abd_return_buf(abd_t *a, void *b, size_t n)
  * Copy back to ABD and return the borrowed linear buffer
  */
 inline void
-abd_return_buf_copy(abd_t *a, void *b, size_t n)
+abd_return_buf_copy_len(abd_t *a, void *b, size_t n)
 {
-	ASSERT3U(a->abd_size, ==, n);
+	ASSERT3U(a->abd_size, >=, n);
 	if (!ABD_IS_LINEAR(a))
 		abd_copy_from_buf(a, b, n);
 	abd_return_buf(a, b, n);
+}
+
+inline void
+abd_return_buf_copy(abd_t *a, void *b, size_t n)
+{
+	ASSERT3U(a->abd_size, ==, n);
+	abd_return_buf_copy_len(a, b, a->abd_size);
 }
 
 #ifdef __cplusplus

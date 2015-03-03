@@ -160,7 +160,7 @@ vdev_file_io_intr(buf_t *bp)
 		zio->io_error = SET_ERROR(ENOSPC);
 
 	if (zio->io_type == ZIO_TYPE_READ) {
-		abd_return_buf_copy(zio->io_data,
+		abd_return_buf_copy_len(zio->io_data,
 		    bp->b_un.b_addr, zio->io_size);
 	} else {
 		abd_return_buf(zio->io_data, bp->b_un.b_addr, zio->io_size);
@@ -236,7 +236,7 @@ vdev_file_io_start(zio_t *zio)
 		    abd_borrow_buf(zio->io_data, zio->io_size);
 	} else {
 		bp->b_un.b_addr =
-		    abd_borrow_buf_copy(zio->io_data, zio->io_size);
+		    abd_borrow_buf_copy_len(zio->io_data, zio->io_size);
 	}
 
 	bp->b_lblkno = lbtodb(zio->io_offset);
