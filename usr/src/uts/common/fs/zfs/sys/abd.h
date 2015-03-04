@@ -185,7 +185,7 @@ abd_borrow_buf(abd_t *a, size_t n)
 	if (ABD_IS_LINEAR(a)) {
 		___b = ABD_TO_BUF(a);
 	} else {
-		___b = zio_buf_alloc(n);
+		___b = zio_buf_alloc(a->abd_size);
 	}
 	return (___b);
 }
@@ -221,7 +221,7 @@ abd_return_buf(abd_t *a, void *b, size_t n)
 	if (ABD_IS_LINEAR(a))
 		ASSERT((b) == ABD_TO_BUF(a));
 	else
-		zio_buf_free(b, n);
+		zio_buf_free(b, a->abd_size);
 }
 
 /*

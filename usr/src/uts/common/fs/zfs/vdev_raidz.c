@@ -387,7 +387,8 @@ vdev_raidz_cksum_finish(zio_cksum_report_t *zcr, const void *good_data)
 			good += rm->rm_col[x].rc_size;
 	}
 
-	bad = abd_borrow_buf_copy(rm->rm_col[c].rc_data, rm->rm_col[c].rc_size);
+	bad = abd_borrow_buf_copy_len(rm->rm_col[c].rc_data,
+	    rm->rm_col[c].rc_size);
 	/* we drop the ereport if it ends up that the data was good */
 	zfs_ereport_finish_checksum(zcr, good, bad, B_TRUE);
 	abd_return_buf(rm->rm_col[c].rc_data, bad, rm->rm_col[c].rc_size);
