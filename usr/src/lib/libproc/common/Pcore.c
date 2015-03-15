@@ -395,9 +395,13 @@ note_lwpstatus(struct ps_prochandle *P, size_t nbytes)
 {
 	lwp_info_t *lwp;
 	lwpstatus_t lps;
+	core_info_t *core = P->data;
+
+	/* XXX figure out what this struct is - nbytes==0x8c */
+	if (core->core_osabi == ELFOSABI_FREEBSD)
+		return (0);
 
 #ifdef _LP64
-	core_info_t *core = P->data;
 
 	if (core->core_dmodel == PR_MODEL_ILP32) {
 		lwpstatus32_t l32;
@@ -439,6 +443,7 @@ err:
 static void
 lx_prpsinfo32_to_psinfo(lx_prpsinfo32_t *p32, psinfo_t *psinfo)
 {
+#if 0
 	psinfo->pr_flag = p32->pr_flag;
 	psinfo->pr_pid = p32->pr_pid;
 	psinfo->pr_ppid = p32->pr_ppid;
@@ -446,6 +451,7 @@ lx_prpsinfo32_to_psinfo(lx_prpsinfo32_t *p32, psinfo_t *psinfo)
 	psinfo->pr_gid = p32->pr_gid;
 	psinfo->pr_sid = p32->pr_sid;
 	psinfo->pr_pgid = p32->pr_pgrp;
+#endif
 
 	(void) memcpy(psinfo->pr_fname, p32->pr_fname,
 	    sizeof (psinfo->pr_fname));
@@ -456,6 +462,7 @@ lx_prpsinfo32_to_psinfo(lx_prpsinfo32_t *p32, psinfo_t *psinfo)
 static void
 lx_prpsinfo64_to_psinfo(lx_prpsinfo64_t *p64, psinfo_t *psinfo)
 {
+#if 0
 	psinfo->pr_flag = p64->pr_flag;
 	psinfo->pr_pid = p64->pr_pid;
 	psinfo->pr_ppid = p64->pr_ppid;
@@ -464,6 +471,7 @@ lx_prpsinfo64_to_psinfo(lx_prpsinfo64_t *p64, psinfo_t *psinfo)
 	psinfo->pr_sid = p64->pr_sid;
 	psinfo->pr_pgid = p64->pr_pgrp;
 	psinfo->pr_pgid = p64->pr_pgrp;
+#endif
 
 	(void) memcpy(psinfo->pr_fname, p64->pr_fname,
 	    sizeof (psinfo->pr_fname));
@@ -510,8 +518,10 @@ err:
 static void
 lx_prstatus64_to_lwp(lx_prstatus64_t *prs64, lwp_info_t *lwp)
 {
+#if 0
 	LTIME_TO_TIMESPEC(lwp->lwp_status.pr_utime, prs64->pr_utime);
 	LTIME_TO_TIMESPEC(lwp->lwp_status.pr_stime, prs64->pr_stime);
+#endif
 
 	lwp->lwp_status.pr_reg[REG_R15] = prs64->pr_reg.lxr_r15;
 	lwp->lwp_status.pr_reg[REG_R14] = prs64->pr_reg.lxr_r14;
@@ -539,52 +549,56 @@ lx_prstatus64_to_lwp(lx_prstatus64_t *prs64, lwp_info_t *lwp)
 	lwp->lwp_status.pr_reg[REG_ES] = prs64->pr_reg.lxr_es;
 	lwp->lwp_status.pr_reg[REG_DS] = prs64->pr_reg.lxr_ds;
 
+#if 0
 	lwp->lwp_status.pr_reg[REG_GSBASE] = prs64->pr_reg.lxr_gs_base;
 	lwp->lwp_status.pr_reg[REG_FSBASE] = prs64->pr_reg.lxr_fs_base;
+#endif
 }
 
 static void
 lx_prstatus32_to_lwp(lx_prstatus32_t *prs32, lwp_info_t *lwp)
 {
+#if 0
 	LTIME_TO_TIMESPEC(lwp->lwp_status.pr_utime, prs32->pr_utime);
 	LTIME_TO_TIMESPEC(lwp->lwp_status.pr_stime, prs32->pr_stime);
+#endif
 
 #ifdef __amd64
-	lwp->lwp_status.pr_reg[REG_GS] = prs32->pr_reg.lxr_gs;
-	lwp->lwp_status.pr_reg[REG_FS] = prs32->pr_reg.lxr_fs;
-	lwp->lwp_status.pr_reg[REG_DS] = prs32->pr_reg.lxr_ds;
-	lwp->lwp_status.pr_reg[REG_ES] = prs32->pr_reg.lxr_es;
-	lwp->lwp_status.pr_reg[REG_RDI] = prs32->pr_reg.lxr_di;
-	lwp->lwp_status.pr_reg[REG_RSI] = prs32->pr_reg.lxr_si;
-	lwp->lwp_status.pr_reg[REG_RBP] = prs32->pr_reg.lxr_bp;
-	lwp->lwp_status.pr_reg[REG_RBX] = prs32->pr_reg.lxr_bx;
-	lwp->lwp_status.pr_reg[REG_RDX] = prs32->pr_reg.lxr_dx;
-	lwp->lwp_status.pr_reg[REG_RCX] = prs32->pr_reg.lxr_cx;
-	lwp->lwp_status.pr_reg[REG_RAX] = prs32->pr_reg.lxr_ax;
-	lwp->lwp_status.pr_reg[REG_RIP] = prs32->pr_reg.lxr_ip;
-	lwp->lwp_status.pr_reg[REG_CS] = prs32->pr_reg.lxr_cs;
-	lwp->lwp_status.pr_reg[REG_RFL] = prs32->pr_reg.lxr_flags;
-	lwp->lwp_status.pr_reg[REG_RSP] = prs32->pr_reg.lxr_sp;
-	lwp->lwp_status.pr_reg[REG_SS] = prs32->pr_reg.lxr_ss;
+	lwp->lwp_status.pr_reg[REG_GS] = prs32->pr_reg.fbsdr_gs;
+	lwp->lwp_status.pr_reg[REG_FS] = prs32->pr_reg.fbsdr_fs;
+	lwp->lwp_status.pr_reg[REG_DS] = prs32->pr_reg.fbsdr_ds;
+	lwp->lwp_status.pr_reg[REG_ES] = prs32->pr_reg.fbsdr_es;
+	lwp->lwp_status.pr_reg[REG_RDI] = prs32->pr_reg.fbsdr_edi;
+	lwp->lwp_status.pr_reg[REG_RSI] = prs32->pr_reg.fbsdr_esi;
+	lwp->lwp_status.pr_reg[REG_RBP] = prs32->pr_reg.fbsdr_ebp;
+	lwp->lwp_status.pr_reg[REG_RBX] = prs32->pr_reg.fbsdr_ebx;
+	lwp->lwp_status.pr_reg[REG_RDX] = prs32->pr_reg.fbsdr_edx;
+	lwp->lwp_status.pr_reg[REG_RCX] = prs32->pr_reg.fbsdr_ecx;
+	lwp->lwp_status.pr_reg[REG_RAX] = prs32->pr_reg.fbsdr_eax;
+	lwp->lwp_status.pr_reg[REG_RIP] = prs32->pr_reg.fbsdr_eip;
+	lwp->lwp_status.pr_reg[REG_CS] = prs32->pr_reg.fbsdr_cs;
+	lwp->lwp_status.pr_reg[REG_RFL] = prs32->pr_reg.fbsdr_eflags;
+	lwp->lwp_status.pr_reg[REG_RSP] = prs32->pr_reg.fbsdr_esp;
+	lwp->lwp_status.pr_reg[REG_SS] = prs32->pr_reg.fbsdr_ss;
 #else /* __amd64 */
-	lwp->lwp_status.pr_reg[EBX] = prs32->pr_reg.lxr_bx;
-	lwp->lwp_status.pr_reg[ECX] = prs32->pr_reg.lxr_cx;
-	lwp->lwp_status.pr_reg[EDX] = prs32->pr_reg.lxr_dx;
-	lwp->lwp_status.pr_reg[ESI] = prs32->pr_reg.lxr_si;
-	lwp->lwp_status.pr_reg[EDI] = prs32->pr_reg.lxr_di;
-	lwp->lwp_status.pr_reg[EBP] = prs32->pr_reg.lxr_bp;
-	lwp->lwp_status.pr_reg[EAX] = prs32->pr_reg.lxr_ax;
-	lwp->lwp_status.pr_reg[EIP] = prs32->pr_reg.lxr_ip;
-	lwp->lwp_status.pr_reg[UESP] = prs32->pr_reg.lxr_sp;
+	lwp->lwp_status.pr_reg[EBX] = prs32->pr_reg.fbsdr_ebx;
+	lwp->lwp_status.pr_reg[ECX] = prs32->pr_reg.fbsdr_ecx;
+	lwp->lwp_status.pr_reg[EDX] = prs32->pr_reg.fbsdr_edx;
+	lwp->lwp_status.pr_reg[ESI] = prs32->pr_reg.fbsdr_esi;
+	lwp->lwp_status.pr_reg[EDI] = prs32->pr_reg.fbsdr_edi;
+	lwp->lwp_status.pr_reg[EBP] = prs32->pr_reg.fbsdr_ebp;
+	lwp->lwp_status.pr_reg[EAX] = prs32->pr_reg.fbsdr_eax;
+	lwp->lwp_status.pr_reg[EIP] = prs32->pr_reg.fbsdr_eip;
+	lwp->lwp_status.pr_reg[UESP] = prs32->pr_reg.fbsdr_esp;
 
-	lwp->lwp_status.pr_reg[DS] = prs32->pr_reg.lxr_ds;
-	lwp->lwp_status.pr_reg[ES] = prs32->pr_reg.lxr_es;
-	lwp->lwp_status.pr_reg[FS] = prs32->pr_reg.lxr_fs;
-	lwp->lwp_status.pr_reg[GS] = prs32->pr_reg.lxr_gs;
-	lwp->lwp_status.pr_reg[CS] = prs32->pr_reg.lxr_cs;
-	lwp->lwp_status.pr_reg[SS] = prs32->pr_reg.lxr_ss;
+	lwp->lwp_status.pr_reg[DS] = prs32->pr_reg.fbsdr_ds;
+	lwp->lwp_status.pr_reg[ES] = prs32->pr_reg.fbsdr_es;
+	lwp->lwp_status.pr_reg[FS] = prs32->pr_reg.fbsdr_fs;
+	lwp->lwp_status.pr_reg[GS] = prs32->pr_reg.fbsdr_gs;
+	lwp->lwp_status.pr_reg[CS] = prs32->pr_reg.fbsdr_cs;
+	lwp->lwp_status.pr_reg[SS] = prs32->pr_reg.fbsdr_ss;
 
-	lwp->lwp_status.pr_reg[EFL] = prs32->pr_reg.lxr_flags;
+	lwp->lwp_status.pr_reg[EFL] = prs32->pr_reg.fbsdr_eflags;
 #endif	/* !__amd64 */
 }
 
@@ -604,12 +618,14 @@ note_linux_prstatus(struct ps_prochandle *P, size_t nbytes)
 		if (nbytes < sizeof (prs32) ||
 		    read(P->asfd, &prs32, sizeof (prs32)) != nbytes)
 			goto err;
-		tid = prs32.pr_pid;
+		/*tid = prs32.pr_pid;*/
+		tid = 2;
 	} else {
 		if (nbytes < sizeof (prs64) ||
 		    read(P->asfd, &prs64, sizeof (prs64)) != nbytes)
 			goto err;
-		tid = prs64.pr_pid;
+		/*tid = prs64.pr_pid;*/
+		tid = 2;
 	}
 
 	if ((lwp = lwpid2info(P, tid)) == NULL) {
@@ -639,9 +655,13 @@ err:
 static int
 note_psinfo(struct ps_prochandle *P, size_t nbytes)
 {
-#ifdef _LP64
 	core_info_t *core = P->data;
 
+	/* XXX figure out what this struct is - nbytes==0xd4 */
+	if (core->core_osabi == ELFOSABI_FREEBSD)
+		return (0);
+
+#ifdef _LP64
 	if (core->core_dmodel == PR_MODEL_ILP32) {
 		psinfo32_t ps32;
 
@@ -2324,6 +2344,8 @@ Pfgrab_core(int core_fd, const char *aout_path, int *perr)
 		goto err;
 	}
 	core_info->core_osabi = core.e_hdr.e_ident[EI_OSABI];
+
+	/* XXX if core_osabi is ELFOSABI_FREEBSD, then interpret as freebsd */
 
 	/*
 	 * Because the core file may be a large file, we can't use libelf to
