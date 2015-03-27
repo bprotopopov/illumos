@@ -1984,7 +1984,7 @@ raidz_checksum_error(zio_t *zio, raidz_col_t *rc, void *bad_data)
 		zbc.zbc_has_cksum = 0;
 		zbc.zbc_injected = rm->rm_ecksuminjected;
 
-		buf = abd_borrow_buf_copy(rc->rc_data, rc->rc_size);
+		buf = abd_borrow_buf_copy_len(rc->rc_data, rc->rc_size);
 		zfs_ereport_post_checksum(zio->io_spa, vd, zio,
 		    rc->rc_offset, rc->rc_size, buf, bad_data,
 		    &zbc);
