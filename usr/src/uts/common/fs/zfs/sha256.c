@@ -25,26 +25,36 @@
 #include <sys/zfs_context.h>
 #include <sys/zio.h>
 #include <sys/sha2.h>
+#include <sys/abd.h>
+
+static int
+sha256_incremental(const void *buf, uint64_t size, void *arg)
+{
+	SHA2_CTX *ctx = arg;
+	SHA2Update(ctx, buf, size);
+	return (0);
+}
 
 void
-zio_checksum_SHA256(const void *buf, uint64_t size, zio_cksum_t *zcp)
+abd_checksum_SHA256(abd_t *abd, uint64_t size, zio_cksum_t *zcp)
 {
 	SHA2_CTX ctx;
 	zio_cksum_t tmp;
 
 	SHA2Init(SHA256, &ctx);
-	SHA2Update(&ctx, buf, size);
+	abd_iterate_rfunc(abd, size, sha256_incremental, &ctx);
 	SHA2Final(&tmp, &ctx);
 
 	/*
 	 * A prior implementation of this function had a
 	 * private SHA256 implementation always wrote things out in
 	 * Big Endian and there wasn't a byteswap variant of it.
-	 * To preseve on disk compatibility we need to force that
-	 * behaviour.
+	 * To preserve on disk compatibility we need to force that
+	 * behavior.
 	 */
 	zcp->zc_word[0] = BE_64(tmp.zc_word[0]);
 	zcp->zc_word[1] = BE_64(tmp.zc_word[1]);
 	zcp->zc_word[2] = BE_64(tmp.zc_word[2]);
 	zcp->zc_word[3] = BE_64(tmp.zc_word[3]);
 }
+

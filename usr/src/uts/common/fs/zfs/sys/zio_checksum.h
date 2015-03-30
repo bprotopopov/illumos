@@ -71,8 +71,6 @@ extern void abd_fletcher_2_byteswap(struct abd *, uint64_t, zio_cksum_t *);
 extern void abd_fletcher_4_native(struct abd *, uint64_t, zio_cksum_t *);
 extern void abd_fletcher_4_byteswap(struct abd *, uint64_t, zio_cksum_t *);
 
-extern void zio_checksum_SHA256(const void *, uint64_t, zio_cksum_t *);
-
 extern void zio_checksum_compute(zio_t *zio, enum zio_checksum checksum,
     struct abd *data, uint64_t size);
 extern int zio_checksum_error(zio_t *zio, zio_bad_cksum_t *out);
