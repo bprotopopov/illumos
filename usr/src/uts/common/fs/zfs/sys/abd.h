@@ -73,6 +73,7 @@ typedef struct abd {
 #define	ABD_F_SCATTER	(0x0)
 #define	ABD_F_LINEAR	(0x1)
 #define	ABD_F_OWNER	(0x2)
+#define	ABD_F_FROZEN	(0x4)
 
 #define	ABD_IS_SCATTER(abd)	(!((abd)->abd_flags & ABD_F_LINEAR))
 #define	ABD_IS_LINEAR(abd)	(!ABD_IS_SCATTER(abd))
@@ -115,6 +116,8 @@ void abd_copy_to_buf_off(void *, abd_t *, size_t, size_t);
 int abd_cmp(abd_t *, abd_t *, size_t);
 int abd_cmp_buf_off(abd_t *, const void *, size_t, size_t);
 void abd_zero_off(abd_t *, size_t, size_t);
+void abd_freeze(abd_t *);
+void abd_thaw(abd_t *);
 #ifdef _KERNEL
 int abd_copy_to_user_off(void *, abd_t *, size_t, size_t);
 int abd_copy_from_user_off(abd_t *, const void *, size_t, size_t);
@@ -231,6 +234,7 @@ inline void
 abd_return_buf_copy_len(abd_t *a, void *b, size_t n)
 {
 	ASSERT3U(a->abd_size, >=, n);
+	ASSERT((a->abd_flags & ABD_F_FROZEN) == 0);
 	if (!ABD_IS_LINEAR(a))
 		abd_copy_from_buf(a, b, n);
 	abd_return_buf(a, b, n);

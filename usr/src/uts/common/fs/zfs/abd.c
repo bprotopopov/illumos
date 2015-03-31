@@ -490,6 +490,7 @@ abd_copy_from_buf_off(abd_t *abd, const void *buf, size_t size,
 
 	ABD_CHECK(abd);
 	ASSERT(size <= abd->abd_size - off);
+	ASSERT((abd->abd_flags & ABD_F_FROZEN) == 0);
 
 	abd_miter_init(&aiter, abd, ABD_MITER_W);
 	(void) abd_miter_advance(&aiter, off);
@@ -632,6 +633,7 @@ abd_zero_off(abd_t *abd, size_t size, size_t off)
 
 	ABD_CHECK(abd);
 	ASSERT(size <= abd->abd_size - off);
+	ASSERT((abd->abd_flags & ABD_F_FROZEN) == 0);
 
 	abd_miter_init(&aiter, abd, ABD_MITER_W);
 	(void) abd_miter_advance(&aiter, off);
@@ -712,6 +714,7 @@ abd_copy_from_user_off(abd_t *abd, const void *buf, size_t size, size_t off)
 
 	ABD_CHECK(abd);
 	ASSERT(size <= abd->abd_size - off);
+	ASSERT((abd->abd_flags & ABD_F_FROZEN) == 0);
 
 	abd_miter_init(&aiter, abd, ABD_MITER_W);
 	(void) abd_miter_advance(&aiter, off);
@@ -1132,4 +1135,16 @@ abd_free(abd_t *abd, size_t size)
 		abd_free_linear(abd, size);
 	else
 		abd_free_scatter(abd, size);
+}
+
+void
+abd_freeze(abd_t *abd)
+{
+	abd->abd_flags |= ABD_F_FROZEN;
+}
+
+void
+abd_thaw(abd_t *abd)
+{
+	abd->abd_flags &= ~ABD_F_FROZEN;
 }

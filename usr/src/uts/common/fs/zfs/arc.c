@@ -1475,6 +1475,7 @@ arc_abd_unwatch(const void *buf, uint64_t len, void *private)
 static void
 arc_buf_unwatch(arc_buf_t *buf)
 {
+	abd_thaw(buf->b_data);
 #ifndef _KERNEL
 	if (arc_watch) {
 		abd_iterate_rfunc(buf->b_data, HDR_GET_LSIZE(buf->b_hdr),
@@ -1487,6 +1488,7 @@ arc_buf_unwatch(arc_buf_t *buf)
 static void
 arc_buf_watch(arc_buf_t *buf)
 {
+	abd_freeze(buf->b_data);
 #ifndef _KERNEL
 	if (arc_watch) {
 		abd_iterate_rfunc(buf->b_data, HDR_GET_LSIZE(buf->b_hdr),
@@ -1566,7 +1568,6 @@ arc_buf_freeze(arc_buf_t *buf)
 	    buf->b_hdr->b_l1hdr.b_state == arc_anon);
 	arc_cksum_compute(buf, B_FALSE);
 	mutex_exit(hash_lock);
-
 }
 
 static void
