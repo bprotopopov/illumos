@@ -3565,9 +3565,6 @@ zio_done(zio_t *zio)
 			abd_t *adata = zio->io_data;
 
 			if (asize != psize) {
-				abuf = zio_buf_alloc(asize);
-				bcopy(zio->io_data, abuf, psize);
-				bzero(abuf + psize, asize - psize);
 				adata = abd_alloc_linear(asize);
 				abd_copy(adata, zio->io_data, psize);
 				abd_zero_off(adata, asize - psize, psize);
