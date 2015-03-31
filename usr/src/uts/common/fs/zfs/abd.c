@@ -985,7 +985,7 @@ abd_get_offset(abd_t *sabd, size_t off)
 		abd->abd_nents = 1;
 		abd->abd_buf = (char *)sabd->abd_buf + off;
 	} else {
-		abd->abd_flags = ABD_F_SCATTER;
+		abd->abd_flags = 0;
 		offset = sabd->abd_offset + off;
 		abd->abd_offset = offset & (PAGE_SIZE - 1);
 		/* make sure the new abd start as sgl[0] */
@@ -1046,7 +1046,7 @@ abd_alloc_scatter(size_t size)
 	abd = abd_alloc_struct(n);
 
 	abd->abd_magic = ARC_BUF_DATA_MAGIC;
-	abd->abd_flags = ABD_F_SCATTER|ABD_F_OWNER;
+	abd->abd_flags = ABD_F_OWNER;
 	abd->abd_size = size;
 	abd->abd_offset = 0;
 	abd->abd_nents = n;

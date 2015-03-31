@@ -70,7 +70,6 @@ typedef struct abd {
 	uint64_t	__abd_sgl[];
 } abd_t;
 
-#define	ABD_F_SCATTER	(0x0)
 #define	ABD_F_LINEAR	(0x1)
 #define	ABD_F_OWNER	(0x2)
 #define	ABD_F_FROZEN	(0x4)
