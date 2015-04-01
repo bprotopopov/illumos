@@ -501,7 +501,7 @@ abd_copy_from_buf_off(abd_t *abd, const void *buf, size_t size,
 
 		abd_miter_map_atomic(&aiter);
 
-		memcpy(aiter.addr, buf, len);
+		(void) memcpy(aiter.addr, buf, len);
 
 		abd_miter_unmap_atomic(&aiter);
 
@@ -533,7 +533,7 @@ abd_copy_to_buf_off(void *buf, abd_t *abd, size_t size, size_t off)
 
 		abd_miter_map_atomic(&aiter);
 
-		memcpy(buf, aiter.addr, len);
+		(void) memcpy(buf, aiter.addr, len);
 
 		abd_miter_unmap_atomic(&aiter);
 
@@ -644,7 +644,7 @@ abd_zero_off(abd_t *abd, size_t size, size_t off)
 
 		abd_miter_map_atomic(&aiter);
 
-		memset(aiter.addr, 0, len);
+		(void) memset(aiter.addr, 0, len);
 
 		abd_miter_unmap_atomic(&aiter);
 
