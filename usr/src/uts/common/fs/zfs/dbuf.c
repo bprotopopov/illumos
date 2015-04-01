@@ -3210,7 +3210,7 @@ boolean_t
 dbuf_can_remap(const dmu_buf_impl_t *db)
 {
 	spa_t *spa = dmu_objset_spa(db->db_objset);
-	blkptr_t *bp = db->db.db_data;
+	blkptr_t *bp = ABD_TO_BUF(db->db.db_data);
 	boolean_t ret = B_FALSE;
 
 	ASSERT3U(db->db_level, >, 0);
