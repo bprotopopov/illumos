@@ -67,7 +67,7 @@ struct scatterlist {
 
 static void
 sg_init_table(struct scatterlist *sg, int nr) {
-	memset(sg, 0, nr * sizeof (struct scatterlist));
+	(void) memset(sg, 0, nr * sizeof (struct scatterlist));
 	sg[nr - 1].last = B_TRUE;
 }
 
@@ -467,7 +467,7 @@ abd_copy_off(abd_t *dabd, abd_t *sabd, size_t size, size_t doff,
 
 		abd_miter_map_atomic2(&daiter, &saiter);
 
-		memcpy(daiter.addr, saiter.addr, len);
+		(void) memcpy(daiter.addr, saiter.addr, len);
 
 		abd_miter_unmap_atomic2(&daiter, &saiter);
 
