@@ -708,7 +708,7 @@ vdev_raidz_generate_parity_pq(raidz_map_t *rm)
 
 		if (c == rm->rm_firstdatacol) {
 			abd_copy_to_buf(p, src, rm->rm_col[c].rc_size);
-			memcpy(q, p, rm->rm_col[c].rc_size);
+			(void) memcpy(q, p, rm->rm_col[c].rc_size);
 		} else {
 			struct pqr_struct pqr = { p, q, NULL };
 			abd_iterate_rfunc(src, rm->rm_col[c].rc_size,
@@ -755,8 +755,8 @@ vdev_raidz_generate_parity_pqr(raidz_map_t *rm)
 
 		if (c == rm->rm_firstdatacol) {
 			abd_copy_to_buf(p, src, rm->rm_col[c].rc_size);
-			memcpy(q, p, rm->rm_col[c].rc_size);
-			memcpy(r, p, rm->rm_col[c].rc_size);
+			(void) memcpy(q, p, rm->rm_col[c].rc_size);
+			(void) memcpy(r, p, rm->rm_col[c].rc_size);
 		} else {
 			struct pqr_struct pqr = { p, q, r };
 			abd_iterate_rfunc(src, rm->rm_col[c].rc_size,
