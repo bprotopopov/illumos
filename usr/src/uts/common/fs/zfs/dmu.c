@@ -1401,7 +1401,7 @@ dmu_write_pages(objset_t *os, uint64_t object, uint64_t offset, uint64_t size,
 			ASSERT3U(pp->p_offset, ==, db->db_offset + bufoff);
 			thiscpy = MIN(PAGESIZE, tocpy - copied);
 			va = zfs_map_page(pp, S_READ);
-			abd_copy_to_buf_off(va, db->db_data, thiscpy, bufoff);
+			abd_copy_from_buf_off(db->db_data, va, thiscpy, bufoff);
 			zfs_unmap_page(pp, va);
 			pp = pp->p_next;
 			bufoff += PAGESIZE;
