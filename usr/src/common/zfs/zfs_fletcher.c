@@ -191,6 +191,7 @@ fletcher_2_incremental_byteswap(const void *buf, uint64_t size, void *private)
 	return (0);
 }
 
+
 void
 fletcher_2_byteswap(const void *buf, uint64_t size, zio_cksum_t *zcp)
 {
