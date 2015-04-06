@@ -79,14 +79,14 @@ zfs_sa_readlink(znode_t *zp, uio_t *uio)
 
 	bufsz = zp->z_size;
 	if (bufsz + ZFS_OLD_ZNODE_PHYS_SIZE <= db->db_size) {
-		error = abd_uiomove_off(db->db_data,
+		error = abd_uiomove_off(db->db_abd,
 		    MIN((size_t)bufsz, uio->uio_resid), UIO_READ, uio,
 		    ZFS_OLD_ZNODE_PHYS_SIZE);
 	} else {
 		dmu_buf_t *dbp;
 		if ((error = dmu_buf_hold(zp->z_zfsvfs->z_os, zp->z_id,
 		    0, FTAG, &dbp, DMU_READ_NO_PREFETCH)) == 0) {
-			error = abd_uiomove(dbp->db_data,
+			error = abd_uiomove(dbp->db_abd,
 			    MIN((size_t)bufsz, uio->uio_resid), UIO_READ, uio);
 			dmu_buf_rele(dbp, FTAG);
 		}
@@ -103,7 +103,7 @@ zfs_sa_symlink(znode_t *zp, char *link, int len, dmu_tx_t *tx)
 		VERIFY(dmu_set_bonus(db,
 		    len + ZFS_OLD_ZNODE_PHYS_SIZE, tx) == 0);
 		if (len) {
-			abd_copy_from_buf_off(db->db_data, link, len,
+			abd_copy_from_buf_off(db->db_abd, link, len,
 			    ZFS_OLD_ZNODE_PHYS_SIZE);
 		}
 	} else {
@@ -116,7 +116,7 @@ zfs_sa_symlink(znode_t *zp, char *link, int len, dmu_tx_t *tx)
 		dmu_buf_will_dirty(dbp, tx);
 
 		ASSERT3U(len, <=, dbp->db_size);
-		abd_copy_from_buf(dbp->db_data, link, len);
+		abd_copy_from_buf(dbp->db_abd, link, len);
 		dmu_buf_rele(dbp, FTAG);
 	}
 }
@@ -148,7 +148,7 @@ zfs_sa_get_scanstamp(znode_t *zp, xvattr_t *xvap)
 
 		if (len <= doi.doi_bonus_size) {
 			abd_copy_to_buf_off(xoap->xoa_av_scanstamp,
-			    db->db_data, sizeof (xoap->xoa_av_scanstamp),
+			    db->db_abd, sizeof (xoap->xoa_av_scanstamp),
 			    ZFS_OLD_ZNODE_PHYS_SIZE);
 		}
 	}
@@ -177,7 +177,7 @@ zfs_sa_set_scanstamp(znode_t *zp, xvattr_t *xvap, dmu_tx_t *tx)
 		    ZFS_OLD_ZNODE_PHYS_SIZE;
 		if (len > doi.doi_bonus_size)
 			VERIFY(dmu_set_bonus(db, len, tx) == 0);
-		abd_copy_from_buf_off(db->db_data, xoap->xoa_av_scanstamp,
+		abd_copy_from_buf_off(db->db_abd, xoap->xoa_av_scanstamp,
 		    sizeof (xoap->xoa_av_scanstamp), ZFS_OLD_ZNODE_PHYS_SIZE);
 
 		zp->z_pflags |= ZFS_BONUS_SCANSTAMP;
@@ -298,7 +298,7 @@ zfs_sa_upgrade(sa_handle_t *hdl, dmu_tx_t *tx)
 	/* if scanstamp then add scanstamp */
 
 	if (zp->z_pflags & ZFS_BONUS_SCANSTAMP) {
-		abd_copy_to_buf_off(scanstamp, db->db_data,
+		abd_copy_to_buf_off(scanstamp, db->db_abd,
 		    AV_SCANSTAMP_SZ, ZFS_OLD_ZNODE_PHYS_SIZE);
 		SA_ADD_BULK_ATTR(sa_attrs, count, SA_ZPL_SCANSTAMP(zfsvfs),
 		    NULL, scanstamp, AV_SCANSTAMP_SZ);

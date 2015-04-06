@@ -837,7 +837,7 @@ do_dump(dmu_sendarg_t *dsa, struct send_block_record *data)
 		    &aflags, zb) != 0)
 			return (SET_ERROR(EIO));
 
-		dnode_phys_t *blk = ABD_TO_BUF(abuf->b_data);
+		dnode_phys_t *blk = ABD_TO_BUF(abuf->b_abd);
 		uint64_t dnobj = zb->zb_blkid * (blksz >> DNODE_SHIFT);
 		for (int i = 0; i < blksz >> DNODE_SHIFT; i++) {
 			err = dump_dnode(dsa, dnobj + i, blk + i);
@@ -856,7 +856,7 @@ do_dump(dmu_sendarg_t *dsa, struct send_block_record *data)
 			return (SET_ERROR(EIO));
 
 		err = dump_spill(dsa, zb->zb_object, blksz,
-		    ABD_TO_BUF(abuf->b_data));
+		    ABD_TO_BUF(abuf->b_abd));
 		(void) arc_buf_remove_ref(abuf, &abuf);
 	} else if (backup_do_embed(dsa, bp)) {
 		/* it's an embedded level-0 block of a regular object */
@@ -893,11 +893,11 @@ do_dump(dmu_sendarg_t *dsa, struct send_block_record *data)
 			if (err == 0) {
 				abuf = arc_buf_alloc(spa, origin_db->db_size,
 				    &abuf, ARC_BUFC_DATA);
-				void *buf = abd_borrow_buf(abuf->b_data,
+				void *buf = abd_borrow_buf(abuf->b_abd,
 				    origin_db->db_size);
 				mooch_byteswap_reconstruct(origin_db,
 				    buf, bp);
-				abd_return_buf_copy(abuf->b_data, buf,
+				abd_return_buf_copy(abuf->b_abd, buf,
 				    origin_db->db_size);
 				dmu_buf_rele(origin_db, FTAG);
 			}
@@ -913,7 +913,7 @@ do_dump(dmu_sendarg_t *dsa, struct send_block_record *data)
 				abuf = arc_buf_alloc(spa, blksz, &abuf,
 				    ARC_BUFC_DATA);
 
-				abd_iterate_wfunc(abuf->b_data, blksz,
+				abd_iterate_wfunc(abuf->b_abd, blksz,
 				    fillbadblock, NULL);
 			} else {
 				return (SET_ERROR(EIO));
@@ -922,7 +922,7 @@ do_dump(dmu_sendarg_t *dsa, struct send_block_record *data)
 
 		offset = zb->zb_blkid * blksz;
 
-		buf = abd_borrow_buf_copy(abuf->b_data, blksz);
+		buf = abd_borrow_buf_copy(abuf->b_abd, blksz);
 		if (!(dsa->dsa_featureflags &
 		    DMU_BACKUP_FEATURE_LARGE_BLOCKS) &&
 		    blksz > SPA_OLD_MAXBLOCKSIZE) {
@@ -939,7 +939,7 @@ do_dump(dmu_sendarg_t *dsa, struct send_block_record *data)
 			err = dump_write(dsa, type, zb->zb_object,
 			    offset, blksz, bp, buf);
 		}
-		abd_return_buf(abuf->b_data, buf, blksz);
+		abd_return_buf(abuf->b_abd, buf, blksz);
 		(void) arc_buf_remove_ref(abuf, &abuf);
 	}
 
@@ -2660,12 +2660,12 @@ receive_object(struct receive_writer_arg *rwa, struct drr_object *drro,
 		dmu_buf_will_dirty(db, tx);
 
 		ASSERT3U(db->db_size, >=, drro->drr_bonuslen);
-		bcopy(data, ABD_TO_BUF(db->db_data), drro->drr_bonuslen);
+		bcopy(data, ABD_TO_BUF(db->db_abd), drro->drr_bonuslen);
 		if (rwa->byteswap) {
 			dmu_object_byteswap_t byteswap =
 			    DMU_OT_BYTESWAP(drro->drr_bonustype);
 			dmu_ot_byteswap[byteswap].ob_func(
-			    ABD_TO_BUF(db->db_data),
+			    ABD_TO_BUF(db->db_abd),
 			    drro->drr_bonuslen);
 		}
 		dmu_buf_rele(db, FTAG);
@@ -2741,10 +2741,10 @@ receive_write(struct receive_writer_arg *rwa, struct drr_write *drrw,
 	if (rwa->byteswap) {
 		dmu_object_byteswap_t byteswap =
 		    DMU_OT_BYTESWAP(drrw->drr_type);
-		void *buf = abd_borrow_buf(abuf->b_data, drrw->drr_length);
+		void *buf = abd_borrow_buf(abuf->b_abd, drrw->drr_length);
 		dmu_ot_byteswap[byteswap].ob_func(buf,
 		    drrw->drr_length);
-		abd_return_buf_copy(abuf->b_data, buf, drrw->drr_length);
+		abd_return_buf_copy(abuf->b_abd, buf, drrw->drr_length);
 	}
 
 	dmu_buf_t *bonus;
@@ -2818,10 +2818,10 @@ receive_write_byref(struct receive_writer_arg *rwa,
 		dmu_tx_abort(tx);
 		return (err);
 	}
-	buf = abd_borrow_buf_copy(dbp->db_data, drrwbr->drr_length);
+	buf = abd_borrow_buf_copy(dbp->db_abd, drrwbr->drr_length);
 	dmu_write(rwa->os, drrwbr->drr_object,
 	    drrwbr->drr_offset, drrwbr->drr_length, buf, tx);
-	abd_return_buf(dbp->db_data, buf, drrwbr->drr_length);
+	abd_return_buf(dbp->db_abd, buf, drrwbr->drr_length);
 	dmu_buf_rele(dbp, FTAG);
 
 	/* See comment in restore_write. */
@@ -2906,7 +2906,7 @@ receive_spill(struct receive_writer_arg *rwa, struct drr_spill *drrs,
 	if (db_spill->db_size < drrs->drr_length)
 		VERIFY(0 == dbuf_spill_set_blksz(db_spill,
 		    drrs->drr_length, tx));
-	abd_copy_from_buf(db_spill->db_data, data, drrs->drr_length);
+	abd_copy_from_buf(db_spill->db_abd, data, drrs->drr_length);
 
 	dmu_buf_rele(db, FTAG);
 	dmu_buf_rele(db_spill, FTAG);
@@ -3165,10 +3165,10 @@ receive_read_record(struct receive_arg *ra)
 		arc_buf_t *abuf = arc_loan_buf(dmu_objset_spa(ra->os),
 		    drrw->drr_length);
 
-		void *buf = abd_borrow_buf(abuf->b_data, drrw->drr_length);
+		void *buf = abd_borrow_buf(abuf->b_abd, drrw->drr_length);
 		err = receive_read_payload_and_next_header(ra,
 		    drrw->drr_length, buf);
-		abd_return_buf_copy(abuf->b_data, buf, drrw->drr_length);
+		abd_return_buf_copy(abuf->b_abd, buf, drrw->drr_length);
 		if (err != 0) {
 			dmu_return_arcbuf(abuf);
 			return (err);

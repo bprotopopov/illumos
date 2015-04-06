@@ -94,7 +94,7 @@ vdev_read_mapping(spa_t *spa, uint64_t mapobj,
 	dmu_buf_t *bonus_buf;
 
 	VERIFY0(dmu_bonus_hold(spa->spa_meta_objset, mapobj, FTAG, &bonus_buf));
-	vdev_indirect_mapping_phys_t *vimp = ABD_TO_BUF(bonus_buf->db_data);
+	vdev_indirect_mapping_phys_t *vimp = ABD_TO_BUF(bonus_buf->db_abd);
 	*countp = vimp->vim_count;
 	dmu_buf_rele(bonus_buf, FTAG);
 
@@ -112,7 +112,7 @@ vdev_read_births(spa_t *spa, uint64_t obj,
 	dmu_buf_t *bonus_buf;
 
 	VERIFY0(dmu_bonus_hold(spa->spa_meta_objset, obj, FTAG, &bonus_buf));
-	vdev_indirect_birth_phys_t *vibp = ABD_TO_BUF(bonus_buf->db_data);
+	vdev_indirect_birth_phys_t *vibp = ABD_TO_BUF(bonus_buf->db_abd);
 	*countp = vibp->vib_count;
 	dmu_buf_rele(bonus_buf, FTAG);
 
@@ -244,7 +244,7 @@ vdev_indirect_child_io_done(zio_t *zio)
 	pio->io_error = zio_worst_error(pio->io_error, zio->io_error);
 	mutex_exit(&pio->io_lock);
 
-	abd_put(zio->io_data);
+	abd_put(zio->io_abd);
 }
 
 static void
@@ -261,7 +261,7 @@ vdev_indirect_io_start_cb(uint64_t split_offset, vdev_t *vd, uint64_t offset,
 	 * this to another thread.
 	 */
 	zio_nowait(zio_vdev_child_io(zio, NULL, vd, offset,
-	    abd_get_offset(zio->io_data, split_offset),
+	    abd_get_offset(zio->io_abd, split_offset),
 	    size, zio->io_type, zio->io_priority,
 	    ZIO_FLAG_DISPATCH, vdev_indirect_child_io_done, zio));
 }

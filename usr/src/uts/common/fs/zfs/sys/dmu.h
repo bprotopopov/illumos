@@ -292,7 +292,7 @@ typedef struct dmu_buf {
 	uint64_t db_object;		/* object that this buffer is part of */
 	uint64_t db_offset;		/* byte offset in this object */
 	uint64_t db_size;		/* size of buffer in bytes */
-	struct abd *db_data;		/* data in buffer */
+	struct abd *db_abd;		/* data in buffer */
 } dmu_buf_t;
 
 typedef void dmu_buf_evict_func_t(struct dmu_buf *db, void *user_ptr);

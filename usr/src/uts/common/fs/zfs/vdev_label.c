@@ -952,7 +952,7 @@ vdev_uberblock_load_done(zio_t *zio)
 	vdev_t *vd = zio->io_vd;
 	spa_t *spa = zio->io_spa;
 	zio_t *rio = zio->io_private;
-	uberblock_t *ub = ABD_TO_BUF(zio->io_data);
+	uberblock_t *ub = ABD_TO_BUF(zio->io_abd);
 	struct ubl_cbdata *cbp = rio->io_private;
 
 	ASSERT3U(zio->io_size, ==, VDEV_UBERBLOCK_SIZE(vd));
@@ -973,7 +973,7 @@ vdev_uberblock_load_done(zio_t *zio)
 		mutex_exit(&rio->io_lock);
 	}
 
-	abd_free(zio->io_data, zio->io_size);
+	abd_free(zio->io_abd, zio->io_size);
 }
 
 static void

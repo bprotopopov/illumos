@@ -286,7 +286,7 @@ traverse_visitbp(traverse_data_t *td, const dnode_phys_t *dnp,
 		    ZIO_PRIORITY_ASYNC_READ, ZIO_FLAG_CANFAIL, &flags, zb);
 		if (err != 0)
 			goto post;
-		cbp = ABD_TO_BUF(buf->b_data);
+		cbp = ABD_TO_BUF(buf->b_abd);
 
 		for (i = 0; i < epb; i++) {
 			SET_BOOKMARK(&czb, zb->zb_objset, zb->zb_object,
@@ -313,7 +313,7 @@ traverse_visitbp(traverse_data_t *td, const dnode_phys_t *dnp,
 		    ZIO_PRIORITY_ASYNC_READ, ZIO_FLAG_CANFAIL, &flags, zb);
 		if (err != 0)
 			goto post;
-		dnode_phys_t *child_dnp = ABD_TO_BUF(buf->b_data);
+		dnode_phys_t *child_dnp = ABD_TO_BUF(buf->b_abd);
 
 		for (i = 0; i < epb; i++) {
 			prefetch_dnode_metadata(td, &child_dnp[i],
@@ -335,7 +335,7 @@ traverse_visitbp(traverse_data_t *td, const dnode_phys_t *dnp,
 		if (err != 0)
 			goto post;
 
-		objset_phys_t *osp = ABD_TO_BUF(buf->b_data);
+		objset_phys_t *osp = ABD_TO_BUF(buf->b_abd);
 		prefetch_dnode_metadata(td, &osp->os_meta_dnode, zb->zb_objset,
 		    DMU_META_DNODE_OBJECT);
 		if (arc_buf_size(buf) >= sizeof (objset_phys_t)) {
@@ -570,7 +570,7 @@ traverse_impl(spa_t *spa, dsl_dataset_t *ds, uint64_t objset, blkptr_t *rootbp,
 		if (err != 0)
 			return (err);
 
-		osp = ABD_TO_BUF(buf->b_data);
+		osp = ABD_TO_BUF(buf->b_abd);
 		traverse_zil(&td, &osp->os_zil_header);
 		(void) arc_buf_remove_ref(buf, &buf);
 	}

@@ -367,7 +367,7 @@ spa_remove_init(spa_t *spa)
 		    svr->svr_vdev->vdev_indirect_state.vis_mapping_object,
 		    FTAG, &bonus_buf));
 		vdev_indirect_mapping_phys_t *vimp =
-		    ABD_TO_BUF(bonus_buf->db_data);
+		    ABD_TO_BUF(bonus_buf->db_abd);
 		svr->svr_max_synced_offset = vimp->vim_max_offset;
 		dmu_buf_rele(bonus_buf, FTAG);
 
@@ -667,7 +667,7 @@ write_indirect_birth_entry(vdev_t *vd, uint64_t max_offset, dmu_tx_t *tx)
 	    FTAG, &bonus));
 	dmu_buf_will_dirty(bonus, tx);
 
-	vdev_indirect_birth_phys_t *vib = ABD_TO_BUF(bonus->db_data);
+	vdev_indirect_birth_phys_t *vib = ABD_TO_BUF(bonus->db_abd);
 	vdev_indirect_birth_entry_phys_t vibe;
 	vibe.vibe_offset = max_offset;
 	vibe.vibe_phys_birth_txg = txg;
@@ -701,7 +701,7 @@ vdev_mapping_sync(void *arg, dmu_tx_t *tx)
 	VERIFY0(dmu_bonus_hold(spa->spa_meta_objset, vis->vis_mapping_object,
 	    FTAG, &bonus_buf));
 	dmu_buf_will_dirty(bonus_buf, tx);
-	vdev_indirect_mapping_phys_t *vimp = ABD_TO_BUF(bonus_buf->db_data);
+	vdev_indirect_mapping_phys_t *vimp = ABD_TO_BUF(bonus_buf->db_abd);
 
 	/*
 	 * Sync out new mapping entries.
@@ -755,7 +755,7 @@ spa_vdev_copy_segment_write_done(zio_t *zio)
 	vdev_copy_seg_arg_t *vcsa = zio->io_private;
 	vdev_copy_arg_t *vca = vcsa->vcsa_copy_arg;
 	spa_config_exit(zio->io_spa, SCL_STATE, FTAG);
-	abd_free(zio->io_data, zio->io_size);
+	abd_free(zio->io_abd, zio->io_size);
 
 	mutex_enter(&vca->vca_lock);
 	vca->vca_outstanding_bytes -= zio->io_size;
@@ -780,7 +780,7 @@ spa_vdev_copy_segment_read_done(zio_t *zio)
 
 	zio_nowait(zio_write_phys(spa->spa_txg_zio[txg & TXG_MASK], dest_vd,
 	    DVA_GET_OFFSET(dest_dva) + VDEV_LABEL_START_SIZE,
-	    zio->io_size, zio->io_data,
+	    zio->io_size, zio->io_abd,
 	    ZIO_CHECKSUM_OFF, spa_vdev_copy_segment_write_done,
 	    vcsa, ZIO_PRIORITY_REMOVAL, 0, B_FALSE));
 }
@@ -1077,7 +1077,7 @@ spa_vdev_remove_thread(void *arg)
 	dmu_buf_t *bonus_buf;
 	VERIFY0(dmu_bonus_hold(spa->spa_meta_objset,
 	    vd->vdev_indirect_state.vis_mapping_object, FTAG, &bonus_buf));
-	vdev_indirect_mapping_phys_t *vimp = ABD_TO_BUF(bonus_buf->db_data);
+	vdev_indirect_mapping_phys_t *vimp = ABD_TO_BUF(bonus_buf->db_abd);
 
 	/*
 	 * Start from vim_max_offset so we pick up where we left off

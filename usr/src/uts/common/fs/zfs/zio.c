@@ -277,12 +277,12 @@ zio_push_transform(zio_t *zio, abd_t *data, uint64_t size, uint64_t bufsize,
 {
 	zio_transform_t *zt = kmem_alloc(sizeof (zio_transform_t), KM_SLEEP);
 
-	if (ABD_IS_LINEAR(zio->io_data))
+	if (ABD_IS_LINEAR(zio->io_abd))
 		ASSERT_ABD_LINEAR(data);
 	else
 		ASSERT_ABD_SCATTER(data);
 
-	zt->zt_orig_data = zio->io_data;
+	zt->zt_orig_abd = zio->io_abd;
 	zt->zt_orig_size = zio->io_size;
 	zt->zt_bufsize = bufsize;
 	zt->zt_transform = transform;
@@ -290,7 +290,7 @@ zio_push_transform(zio_t *zio, abd_t *data, uint64_t size, uint64_t bufsize,
 	zt->zt_next = zio->io_transform_stack;
 	zio->io_transform_stack = zt;
 
-	zio->io_data = data;
+	zio->io_abd = data;
 	zio->io_size = size;
 }
 
@@ -302,12 +302,12 @@ zio_pop_transforms(zio_t *zio)
 	while ((zt = zio->io_transform_stack) != NULL) {
 		if (zt->zt_transform != NULL)
 			zt->zt_transform(zio,
-			    zt->zt_orig_data, zt->zt_orig_size);
+			    zt->zt_orig_abd, zt->zt_orig_size);
 
 		if (zt->zt_bufsize != 0)
-			abd_free(zio->io_data, zt->zt_bufsize);
+			abd_free(zio->io_abd, zt->zt_bufsize);
 
-		zio->io_data = zt->zt_orig_data;
+		zio->io_abd = zt->zt_orig_abd;
 		zio->io_size = zt->zt_orig_size;
 		zio->io_transform_stack = zt->zt_next;
 
@@ -326,7 +326,7 @@ zio_subblock(zio_t *zio, abd_t *data, uint64_t size)
 	ASSERT(zio->io_size > size);
 
 	if (zio->io_type == ZIO_TYPE_READ)
-		abd_copy(data, zio->io_data, size);
+		abd_copy(data, zio->io_abd, size);
 }
 
 static void
@@ -334,7 +334,7 @@ zio_decompress(zio_t *zio, abd_t *data, uint64_t size)
 {
 	void *buf1, *buf2;
 	if (zio->io_error == 0) {
-		buf1 = abd_borrow_buf_copy(zio->io_data, zio->io_size);
+		buf1 = abd_borrow_buf_copy(zio->io_abd, zio->io_size);
 		buf2 = abd_borrow_buf(data, size);
 
 		if (zio_decompress_data(BP_GET_COMPRESS(zio->io_bp),
@@ -342,7 +342,7 @@ zio_decompress(zio_t *zio, abd_t *data, uint64_t size)
 			zio->io_error = SET_ERROR(EIO);
 
 		abd_return_buf_copy(data, buf2, size);
-		abd_return_buf(zio->io_data, buf1, zio->io_size);
+		abd_return_buf(zio->io_abd, buf1, zio->io_size);
 	}
 }
 
@@ -588,7 +588,7 @@ zio_create(zio_t *pio, spa_t *spa, uint64_t txg, const blkptr_t *bp,
 	zio->io_priority = priority;
 	zio->io_vd = vd;
 	zio->io_offset = offset;
-	zio->io_orig_data = zio->io_data = data;
+	zio->io_orig_abd = zio->io_abd = data;
 	zio->io_orig_size = zio->io_size = size;
 	zio->io_orig_flags = zio->io_flags = flags;
 	zio->io_orig_stage = zio->io_stage = stage;
@@ -1145,7 +1145,7 @@ zio_read_bp_init(zio_t *zio)
 		    BP_IS_EMBEDDED(bp) ? BPE_GET_PSIZE(bp) : BP_GET_PSIZE(bp);
 		abd_t *cbuf;
 
-		if (ABD_IS_LINEAR(zio->io_data))
+		if (ABD_IS_LINEAR(zio->io_abd))
 			cbuf = abd_alloc_linear(psize);
 		else
 			cbuf = abd_alloc_scatter(psize);
@@ -1158,9 +1158,9 @@ zio_read_bp_init(zio_t *zio)
 		zio->io_pipeline = ZIO_INTERLOCK_PIPELINE;
 
 		psize = BPE_GET_PSIZE(bp);
-		data = abd_borrow_buf(zio->io_data, psize);
+		data = abd_borrow_buf(zio->io_abd, psize);
 		decode_embedded_bp_compressed(bp, data);
-		abd_return_buf_copy(zio->io_data, data, psize);
+		abd_return_buf_copy(zio->io_abd, data, psize);
 	} else {
 		ASSERT(!BP_IS_EMBEDDED(bp));
 		ASSERT3P(zio->io_bp, ==, &zio->io_bp_copy);
@@ -1282,16 +1282,16 @@ zio_write_compress(zio_t *zio)
 		void *dbuf;
 		abd_t *cdata;
 
-		if (ABD_IS_LINEAR(zio->io_data))
+		if (ABD_IS_LINEAR(zio->io_abd))
 			cdata = abd_alloc_linear(lsize);
 		else
 			cdata = abd_alloc_scatter(lsize);
 
 		cbuf = abd_borrow_buf(cdata, lsize);
 
-		dbuf = abd_borrow_buf_copy(zio->io_data, lsize);
+		dbuf = abd_borrow_buf_copy(zio->io_abd, lsize);
 		psize = zio_compress_data(compress, dbuf, cbuf, lsize);
-		abd_return_buf(zio->io_data, dbuf, lsize);
+		abd_return_buf(zio->io_abd, dbuf, lsize);
 
 		if (psize == 0 || psize == lsize) {
 			compress = ZIO_COMPRESS_OFF;
@@ -1847,7 +1847,7 @@ zio_resume_wait(spa_t *spa)
 static void
 zio_gang_issue_func_done(zio_t *zio)
 {
-	abd_put(zio->io_data);
+	abd_put(zio->io_abd);
 }
 
 static zio_t *
@@ -2007,13 +2007,13 @@ zio_gang_tree_assemble_done(zio_t *zio)
 		return;
 
 	if (BP_SHOULD_BYTESWAP(bp))
-		byteswap_uint64_array(ABD_TO_BUF(zio->io_data), zio->io_size);
+		byteswap_uint64_array(ABD_TO_BUF(zio->io_abd), zio->io_size);
 
-	ASSERT(ABD_TO_BUF(zio->io_data) == gn->gn_gbh);
+	ASSERT(ABD_TO_BUF(zio->io_abd) == gn->gn_gbh);
 	ASSERT(zio->io_size == SPA_GANGBLOCKSIZE);
 	ASSERT(gn->gn_gbh->zg_tail.zec_magic == ZEC_MAGIC);
 
-	abd_put(zio->io_data);
+	abd_put(zio->io_abd);
 
 	for (int g = 0; g < SPA_GBH_NBLKPTRS; g++) {
 		blkptr_t *gbp = &gn->gn_gbh->zg_blkptr[g];
@@ -2087,7 +2087,7 @@ zio_gang_issue(zio_t *zio)
 	ASSERT(zio->io_child_type > ZIO_CHILD_GANG);
 
 	if (zio->io_child_error[ZIO_CHILD_GANG] == 0)
-		zio_gang_tree_issue(zio, zio->io_gang_tree, bp, zio->io_data,
+		zio_gang_tree_issue(zio, zio->io_gang_tree, bp, zio->io_abd,
 		    0);
 	else
 		zio_gang_tree_free(&zio->io_gang_tree);
@@ -2130,7 +2130,7 @@ zio_write_gang_member_ready(zio_t *zio)
 static void
 zio_write_gang_done(zio_t *zio)
 {
-	abd_put(zio->io_data);
+	abd_put(zio->io_abd);
 }
 
 static int
@@ -2231,7 +2231,7 @@ zio_write_gang_block(zio_t *pio)
 		zp.zp_nopwrite = B_FALSE;
 
 		zio_t *cio = zio_write(zio, spa, txg, &gbh->zg_blkptr[g],
-		    abd_get_offset(pio->io_data, pio->io_size - resid), lsize,
+		    abd_get_offset(pio->io_abd, pio->io_size - resid), lsize,
 		    &zp, zio_write_gang_member_ready, NULL,
 		    zio_write_gang_done, &gn->gn_child[g], pio->io_priority,
 		    ZIO_GANG_CHILD_FLAGS(pio), &pio->io_bookmark);
@@ -2335,10 +2335,10 @@ zio_ddt_child_read_done(zio_t *zio)
 	if (zio->io_error == 0)
 		ddt_phys_clear(ddp);	/* this ddp doesn't need repair */
 
-	if (zio->io_error == 0 && dde->dde_repair_data == NULL)
-		dde->dde_repair_data = zio->io_data;
+	if (zio->io_error == 0 && dde->dde_repair_abd == NULL)
+		dde->dde_repair_abd = zio->io_abd;
 	else
-		abd_free(zio->io_data, zio->io_size);
+		abd_free(zio->io_abd, zio->io_size);
 	mutex_exit(&pio->io_lock);
 }
 
@@ -2379,7 +2379,7 @@ zio_ddt_read_start(zio_t *zio)
 	}
 
 	zio_nowait(zio_read(zio, zio->io_spa, bp,
-	    zio->io_data, zio->io_size, NULL, NULL, zio->io_priority,
+	    zio->io_abd, zio->io_size, NULL, NULL, zio->io_priority,
 	    ZIO_DDT_CHILD_FLAGS(zio), &zio->io_bookmark));
 
 	return (ZIO_PIPELINE_CONTINUE);
@@ -2409,8 +2409,8 @@ zio_ddt_read_done(zio_t *zio)
 			zio_taskq_dispatch(zio, ZIO_TASKQ_ISSUE, B_FALSE);
 			return (ZIO_PIPELINE_STOP);
 		}
-		if (dde->dde_repair_data != NULL) {
-			abd_copy(zio->io_data, dde->dde_repair_data,
+		if (dde->dde_repair_abd != NULL) {
+			abd_copy(zio->io_abd, dde->dde_repair_abd,
 			    zio->io_size);
 			zio->io_child_error[ZIO_CHILD_DDT] = 0;
 		}
@@ -2439,7 +2439,7 @@ zio_ddt_collision(zio_t *zio, ddt_t *ddt, ddt_entry_t *dde)
 
 		if (lio != NULL) {
 			return (lio->io_orig_size != zio->io_orig_size ||
-			    abd_cmp(zio->io_orig_data, lio->io_orig_data,
+			    abd_cmp(zio->io_orig_abd, lio->io_orig_abd,
 			    zio->io_orig_size) != 0);
 		}
 	}
@@ -2464,7 +2464,7 @@ zio_ddt_collision(zio_t *zio, ddt_t *ddt, ddt_entry_t *dde)
 
 			if (error == 0) {
 				if (arc_buf_size(abuf) != zio->io_orig_size ||
-				    abd_cmp(abuf->b_data, zio->io_orig_data,
+				    abd_cmp(abuf->b_abd, zio->io_orig_abd,
 				    zio->io_orig_size) != 0)
 					error = SET_ERROR(EEXIST);
 				VERIFY(arc_buf_remove_ref(abuf, &abuf));
@@ -2626,12 +2626,12 @@ zio_ddt_write(zio_t *zio)
 			return (ZIO_PIPELINE_CONTINUE);
 		}
 
-		dio = zio_write(zio, spa, txg, bp, zio->io_orig_data,
+		dio = zio_write(zio, spa, txg, bp, zio->io_orig_abd,
 		    zio->io_orig_size, &czp, NULL, NULL,
 		    zio_ddt_ditto_write_done, dde, zio->io_priority,
 		    ZIO_DDT_CHILD_FLAGS(zio), &zio->io_bookmark);
 
-		zio_push_transform(dio, zio->io_data, zio->io_size, 0, NULL);
+		zio_push_transform(dio, zio->io_abd, zio->io_size, 0, NULL);
 		dde->dde_lead_zio[DDT_PHYS_DITTO] = dio;
 	}
 
@@ -2648,12 +2648,12 @@ zio_ddt_write(zio_t *zio)
 		ddt_phys_fill(ddp, bp);
 		ddt_phys_addref(ddp);
 	} else {
-		cio = zio_write(zio, spa, txg, bp, zio->io_orig_data,
+		cio = zio_write(zio, spa, txg, bp, zio->io_orig_abd,
 		    zio->io_orig_size, zp, zio_ddt_child_write_ready, NULL,
 		    zio_ddt_child_write_done, dde, zio->io_priority,
 		    ZIO_DDT_CHILD_FLAGS(zio), &zio->io_bookmark);
 
-		zio_push_transform(cio, zio->io_data, zio->io_size, 0, NULL);
+		zio_push_transform(cio, zio->io_abd, zio->io_size, 0, NULL);
 		dde->dde_lead_zio[p] = cio;
 	}
 
@@ -3000,13 +3000,13 @@ zio_vdev_io_start(zio_t *zio)
 		/* Transform logical writes to be a full physical block size. */
 		uint64_t asize = P2ROUNDUP(zio->io_size, align);
 		abd_t *abuf;
-		if (ABD_IS_LINEAR(zio->io_data))
+		if (ABD_IS_LINEAR(zio->io_abd))
 			abuf = abd_alloc_linear(asize);
 		else
 			abuf = abd_alloc_scatter(asize);
 		ASSERT(vd == vd->vdev_top);
 		if (zio->io_type == ZIO_TYPE_WRITE) {
-			abd_copy(abuf, zio->io_data, zio->io_size);
+			abd_copy(abuf, zio->io_abd, zio->io_size);
 			abd_zero_off(abuf, asize - zio->io_size, zio->io_size);
 		}
 		zio_push_transform(zio, abuf, asize, asize, zio_subblock);
@@ -3133,7 +3133,7 @@ zio_vsd_default_cksum_report(zio_t *zio, zio_cksum_report_t *zcr, void *ignored)
 {
 	void *buf = zio_buf_alloc(zio->io_size);
 
-	abd_copy_to_buf(buf, zio->io_data, zio->io_size);
+	abd_copy_to_buf(buf, zio->io_abd, zio->io_size);
 
 	zcr->zcr_cbinfo = zio->io_size;
 	zcr->zcr_cbdata = buf;
@@ -3267,7 +3267,7 @@ zio_checksum_generate(zio_t *zio)
 		}
 	}
 
-	zio_checksum_compute(zio, checksum, zio->io_data, zio->io_size);
+	zio_checksum_compute(zio, checksum, zio->io_abd, zio->io_size);
 
 	return (ZIO_PIPELINE_CONTINUE);
 }
@@ -3406,7 +3406,7 @@ zio_ready(zio_t *zio)
 		if (BP_IS_GANG(bp)) {
 			zio->io_flags &= ~ZIO_FLAG_NODATA;
 		} else {
-			ASSERT((uintptr_t)zio->io_data < SPA_MAXBLOCKSIZE);
+			ASSERT((uintptr_t)zio->io_abd < SPA_MAXBLOCKSIZE);
 			zio->io_pipeline &= ~ZIO_VDEV_IO_STAGES;
 		}
 	}
@@ -3562,11 +3562,11 @@ zio_done(zio_t *zio)
 			uint64_t align = zcr->zcr_align;
 			uint64_t asize = P2ROUNDUP(psize, align);
 			char *abuf = NULL;
-			abd_t *adata = zio->io_data;
+			abd_t *adata = zio->io_abd;
 
 			if (asize != psize) {
 				adata = abd_alloc_linear(asize);
-				abd_copy(adata, zio->io_data, psize);
+				abd_copy(adata, zio->io_abd, psize);
 				abd_zero_off(adata, asize - psize, psize);
 			}
 

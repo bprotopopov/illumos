@@ -909,8 +909,8 @@ zfs_write(vnode_t *vp, uio_t *uio, int ioflag, cred_t *cr, caller_context_t *ct)
 			DTRACE_PROBE3(zfs_cp_write, int, i_iov,
 			    iovec_t *, aiov, arc_buf_t *, abuf);
 #if 0
-			ASSERT((aiov->iov_base == abuf->b_data) ||
-			    ((char *)aiov->iov_base - (char *)abuf->b_data +
+			ASSERT((aiov->iov_base == abuf->b_abd) ||
+			    ((char *)aiov->iov_base - (char *)abuf->b_abd +
 			    aiov->iov_len == arc_buf_size(abuf)));
 #endif
 			i_iov++;
@@ -931,7 +931,7 @@ zfs_write(vnode_t *vp, uio_t *uio, int ioflag, cred_t *cr, caller_context_t *ct)
 			    max_blksz);
 			ASSERT(abuf != NULL);
 			ASSERT(arc_buf_size(abuf) == max_blksz);
-			if ((error = abd_uiocopy(abuf->b_data, max_blksz,
+			if ((error = abd_uiocopy(abuf->b_abd, max_blksz,
 			    UIO_WRITE, uio, &cbytes))) {
 				dmu_return_arcbuf(abuf);
 				break;
@@ -1003,7 +1003,7 @@ zfs_write(vnode_t *vp, uio_t *uio, int ioflag, cred_t *cr, caller_context_t *ct)
 			ASSERT(! (tx_bytes < max_blksz && (!write_eof)));
 #if 0
 			if (tx_bytes < max_blksz && (!write_eof ||
-			    aiov->iov_base != abuf->b_data)) {
+			    aiov->iov_base != abuf->b_abd)) {
 				ASSERT(xuio);
 				dmu_write(zfsvfs->z_os, zp->z_id, woff,
 				    aiov->iov_len, aiov->iov_base, tx);

@@ -71,10 +71,10 @@ extern void abd_fletcher_2_byteswap(struct abd *, uint64_t, zio_cksum_t *);
 extern void abd_fletcher_4_native(struct abd *, uint64_t, zio_cksum_t *);
 extern void abd_fletcher_4_byteswap(struct abd *, uint64_t, zio_cksum_t *);
 
-extern void zio_checksum_compute(zio_t *zio, enum zio_checksum checksum,
-    struct abd *data, uint64_t size);
-extern int zio_checksum_error(zio_t *zio, zio_bad_cksum_t *out);
-extern enum zio_checksum spa_dedup_checksum(spa_t *spa);
+extern void zio_checksum_compute(zio_t *, enum zio_checksum,
+    struct abd *, uint64_t);
+extern int zio_checksum_error(zio_t *, zio_bad_cksum_t *);
+extern enum zio_checksum spa_dedup_checksum(spa_t *);
 
 #ifdef	__cplusplus
 }

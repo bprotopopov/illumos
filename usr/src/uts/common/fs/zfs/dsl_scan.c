@@ -630,12 +630,12 @@ dsl_scan_recurse(dsl_scan_t *scn, dsl_dataset_t *ds, dmu_objset_type_t ostype,
 			scn->scn_phys.scn_errors++;
 			return (err);
 		}
-		cbp = ABD_TO_BUF(buf->b_data);
+		cbp = ABD_TO_BUF(buf->b_abd);
 		for (i = 0; i < epb; i++, cbp++) {
 			dsl_scan_prefetch(scn, buf, cbp, zb->zb_objset,
 			    zb->zb_object, zb->zb_blkid * epb + i);
 		}
-		cbp = ABD_TO_BUF(buf->b_data);
+		cbp = ABD_TO_BUF(buf->b_abd);
 		for (i = 0; i < epb; i++, cbp++) {
 			zbookmark_phys_t czb;
 
@@ -659,7 +659,7 @@ dsl_scan_recurse(dsl_scan_t *scn, dsl_dataset_t *ds, dmu_objset_type_t ostype,
 			scn->scn_phys.scn_errors++;
 			return (err);
 		}
-		cdnp = ABD_TO_BUF(buf->b_data);
+		cdnp = ABD_TO_BUF(buf->b_abd);
 		for (i = 0; i < epb; i++, cdnp++) {
 			for (j = 0; j < cdnp->dn_nblkptr; j++) {
 				blkptr_t *cbp = &cdnp->dn_blkptr[j];
@@ -667,7 +667,7 @@ dsl_scan_recurse(dsl_scan_t *scn, dsl_dataset_t *ds, dmu_objset_type_t ostype,
 				    zb->zb_objset, zb->zb_blkid * epb + i, j);
 			}
 		}
-		cdnp = ABD_TO_BUF(buf->b_data);
+		cdnp = ABD_TO_BUF(buf->b_abd);
 		for (i = 0; i < epb; i++, cdnp++) {
 			dsl_scan_visitdnode(scn, ds, ostype,
 			    cdnp, zb->zb_blkid * epb + i, tx);
@@ -686,7 +686,7 @@ dsl_scan_recurse(dsl_scan_t *scn, dsl_dataset_t *ds, dmu_objset_type_t ostype,
 			return (err);
 		}
 
-		osp = ABD_TO_BUF(buf->b_data);
+		osp = ABD_TO_BUF(buf->b_abd);
 
 		dsl_scan_visitdnode(scn, ds, osp->os_type,
 		    &osp->os_meta_dnode, DMU_META_DNODE_OBJECT, tx);
@@ -1692,7 +1692,7 @@ dsl_scan_scrub_done(zio_t *zio)
 {
 	spa_t *spa = zio->io_spa;
 
-	abd_free(zio->io_data, zio->io_size);
+	abd_free(zio->io_abd, zio->io_size);
 
 	mutex_enter(&spa->spa_scrub_lock);
 	spa->spa_scrub_inflight--;
@@ -1775,7 +1775,7 @@ dsl_scan_scrub_cb(dsl_pool_t *dp,
 	if (needs_io && !zfs_no_scrub_io) {
 		vdev_t *rvd = spa->spa_root_vdev;
 		uint64_t maxinflight = rvd->vdev_children * zfs_top_maxinflight;
-		abd_t *data = abd_alloc_linear(size);
+		abd_t *abd = abd_alloc_linear(size);
 
 		mutex_enter(&spa->spa_scrub_lock);
 		while (spa->spa_scrub_inflight >= maxinflight)
@@ -1790,7 +1790,7 @@ dsl_scan_scrub_cb(dsl_pool_t *dp,
 		if (ddi_get_lbolt64() - spa->spa_last_io <= zfs_scan_idle)
 			delay(scan_delay);
 
-		zio_nowait(zio_read(NULL, spa, bp, data, size,
+		zio_nowait(zio_read(NULL, spa, bp, abd, size,
 		    dsl_scan_scrub_done, NULL, ZIO_PRIORITY_SCRUB,
 		    zio_flags, zb));
 	}

@@ -67,10 +67,10 @@ dnode_increase_indirection(dnode_t *dn, dmu_tx_t *tx)
 	if (i != nblkptr) {
 		/* transfer dnode's block pointers to new indirect block */
 		(void) dbuf_read(db, NULL, DB_RF_MUST_SUCCEED|DB_RF_HAVESTRUCT);
-		ASSERT(db->db.db_data);
+		ASSERT(db->db.db_abd);
 		ASSERT(arc_released(db->db_buf));
 		ASSERT3U(sizeof (blkptr_t) * nblkptr, <=, db->db.db_size);
-		bcopy(dn->dn_phys->dn_blkptr, ABD_TO_BUF(db->db.db_data),
+		bcopy(dn->dn_phys->dn_blkptr, ABD_TO_BUF(db->db.db_abd),
 		    sizeof (blkptr_t) * nblkptr);
 		arc_buf_freeze(db->db_buf);
 	}
@@ -98,9 +98,9 @@ dnode_increase_indirection(dnode_t *dn, dmu_tx_t *tx)
 
 		child->db_parent = db;
 		dbuf_add_ref(db, child);
-		if (db->db.db_data)
+		if (db->db.db_abd)
 			child->db_blkptr =
-			    (blkptr_t *)ABD_TO_BUF(db->db.db_data) + i;
+			    (blkptr_t *)ABD_TO_BUF(db->db.db_abd) + i;
 		else
 			child->db_blkptr = NULL;
 		dprintf_dbuf_bp(child, child->db_blkptr,
@@ -200,7 +200,7 @@ free_verify(dmu_buf_impl_t *db, uint64_t start, uint64_t end, dmu_tx_t *tx)
 	ASSERT(db->db_blkptr != NULL);
 
 	for (i = off; i < off+num; i++) {
-		abd_t *buf;
+		abd_t *abd;
 		dmu_buf_impl_t *child;
 		dbuf_dirty_record_t *dr;
 
@@ -222,8 +222,8 @@ free_verify(dmu_buf_impl_t *db, uint64_t start, uint64_t end, dmu_tx_t *tx)
 		/* data_old better be zeroed */
 		if (dr) {
 			uint64_t tmp = 0;
-			buf = dr->dt.dl.dr_data->b_data;
-			abd_iterate_rfunc(buf, child->db.db_size,
+			abd = dr->dt.dl.dr_data->b_abd;
+			abd_iterate_rfunc(abd, child->db.db_size,
 			    checkzero, &tmp);
 			if (tmp) {
 				panic("freed data not zero: "
@@ -237,11 +237,11 @@ free_verify(dmu_buf_impl_t *db, uint64_t start, uint64_t end, dmu_tx_t *tx)
 		 * future txg.
 		 */
 		mutex_enter(&child->db_mtx);
-		buf = child->db.db_data;
-		if (buf != NULL && child->db_state != DB_FILL &&
+		abd = child->db.db_abd;
+		if (abd != NULL && child->db_state != DB_FILL &&
 		    child->db_last_dirty == NULL) {
 			uint64_t tmp = 0;
-			abd_iterate_rfunc(buf, child->db.db_size,
+			abd_iterate_rfunc(abd, child->db.db_size,
 			    checkzero, &tmp);
 			if (tmp) {
 				panic("freed data not zero: "
@@ -277,7 +277,7 @@ free_children(dmu_buf_impl_t *db, uint64_t blkid, uint64_t nblks,
 		(void) dbuf_read(db, NULL, DB_RF_MUST_SUCCEED);
 
 	dbuf_release_bp(db);
-	bp = (blkptr_t *)ABD_TO_BUF(db->db.db_data);
+	bp = (blkptr_t *)ABD_TO_BUF(db->db.db_abd);
 
 	DB_DNODE_ENTER(db);
 	dn = DB_DNODE(db);
@@ -316,14 +316,14 @@ free_children(dmu_buf_impl_t *db, uint64_t blkid, uint64_t nblks,
 	}
 
 	/* If this whole block is free, free ourself too. */
-	bp = ABD_TO_BUF(db->db.db_data);
+	bp = ABD_TO_BUF(db->db.db_abd);
 	for (i = 0; i < 1 << epbs; i++, bp++) {
 		if (!BP_IS_HOLE(bp))
 			break;
 	}
 	if (i == 1 << epbs) {
 		/* didn't find any non-holes */
-		bzero(ABD_TO_BUF(db->db.db_data), db->db.db_size);
+		bzero(ABD_TO_BUF(db->db.db_abd), db->db.db_size);
 		free_blocks(dn, db->db_blkptr, 1, tx);
 	} else {
 		/*

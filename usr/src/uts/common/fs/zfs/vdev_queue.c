@@ -345,12 +345,12 @@ vdev_queue_agg_io_done(zio_t *aio)
 		zio_t *pio;
 		zio_link_t *zl = NULL;
 		while ((pio = zio_walk_parents(aio, &zl)) != NULL) {
-			abd_copy_off(pio->io_data, aio->io_data, pio->io_size,
+			abd_copy_off(pio->io_abd, aio->io_abd, pio->io_size,
 			    0, pio->io_offset - aio->io_offset);
 		}
 	}
 
-	abd_free(aio->io_data, aio->io_size);
+	abd_free(aio->io_abd, aio->io_size);
 }
 
 static int
@@ -619,10 +619,10 @@ vdev_queue_aggregate(vdev_queue_t *vq, zio_t *zio)
 
 		if (dio->io_flags & ZIO_FLAG_NODATA) {
 			ASSERT3U(dio->io_type, ==, ZIO_TYPE_WRITE);
-			abd_zero_off(aio->io_data, dio->io_size,
+			abd_zero_off(aio->io_abd, dio->io_size,
 			    dio->io_offset - aio->io_offset);
 		} else if (dio->io_type == ZIO_TYPE_WRITE) {
-			abd_copy_off(aio->io_data, dio->io_data, dio->io_size,
+			abd_copy_off(aio->io_abd, dio->io_abd, dio->io_size,
 			    dio->io_offset - aio->io_offset, 0);
 		}
 

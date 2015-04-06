@@ -143,11 +143,11 @@ vdev_cache_evict(vdev_cache_t *vc, vdev_cache_entry_t *ve)
 {
 	ASSERT(MUTEX_HELD(&vc->vc_lock));
 	ASSERT(ve->ve_fill_io == NULL);
-	ASSERT(ve->ve_data != NULL);
+	ASSERT(ve->ve_abd != NULL);
 
 	avl_remove(&vc->vc_lastused_tree, ve);
 	avl_remove(&vc->vc_offset_tree, ve);
-	abd_free(ve->ve_data, VCBS);
+	abd_free(ve->ve_abd, VCBS);
 	kmem_free(ve, sizeof (vdev_cache_entry_t));
 }
 
@@ -184,7 +184,7 @@ vdev_cache_allocate(zio_t *zio)
 	ve = kmem_zalloc(sizeof (vdev_cache_entry_t), KM_SLEEP);
 	ve->ve_offset = offset;
 	ve->ve_lastused = ddi_get_lbolt();
-	ve->ve_data = abd_alloc_scatter(VCBS);
+	ve->ve_abd = abd_alloc_scatter(VCBS);
 
 	avl_add(&vc->vc_offset_tree, ve);
 	avl_add(&vc->vc_lastused_tree, ve);
@@ -207,7 +207,7 @@ vdev_cache_hit(vdev_cache_t *vc, vdev_cache_entry_t *ve, zio_t *zio)
 	}
 
 	ve->ve_hits++;
-	abd_copy_off(zio->io_data, ve->ve_data, zio->io_size,
+	abd_copy_off(zio->io_abd, ve->ve_abd, zio->io_size,
 	    0, cache_phase);
 }
 
@@ -231,7 +231,7 @@ vdev_cache_fill(zio_t *fio)
 
 	ASSERT(ve->ve_fill_io == fio);
 	ASSERT(ve->ve_offset == fio->io_offset);
-	ASSERT(ve->ve_data == fio->io_data);
+	ASSERT(ve->ve_abd == fio->io_abd);
 
 	ve->ve_fill_io = NULL;
 
@@ -313,7 +313,7 @@ vdev_cache_read(zio_t *zio)
 	}
 
 	fio = zio_vdev_delegated_io(zio->io_vd, cache_offset,
-	    ve->ve_data, VCBS, ZIO_TYPE_READ, ZIO_PRIORITY_NOW,
+	    ve->ve_abd, VCBS, ZIO_TYPE_READ, ZIO_PRIORITY_NOW,
 	    ZIO_FLAG_DONT_CACHE, vdev_cache_fill, ve);
 
 	ve->ve_fill_io = fio;
@@ -358,7 +358,7 @@ vdev_cache_write(zio_t *zio)
 		if (ve->ve_fill_io != NULL) {
 			ve->ve_missed_update = 1;
 		} else {
-			abd_copy_off(ve->ve_data, zio->io_data, end - start,
+			abd_copy_off(ve->ve_abd, zio->io_abd, end - start,
 			    start - ve->ve_offset, start - io_start);
 		}
 		ve = AVL_NEXT(&vc->vc_offset_tree, ve);

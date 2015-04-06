@@ -1308,7 +1308,7 @@ ztest_bt_bonus(dmu_buf_t *db)
 	dmu_object_info_from_db(db, &doi);
 	ASSERT3U(doi.doi_bonus_size, <=, db->db_size);
 	ASSERT3U(doi.doi_bonus_size, >=, sizeof (*bt));
-	bt = (void *)((char *)ABD_TO_BUF(db->db_data) + doi.doi_bonus_size -
+	bt = (void *)((char *)ABD_TO_BUF(db->db_abd) + doi.doi_bonus_size -
 	    sizeof (*bt));
 
 	return (bt);
@@ -1671,7 +1671,7 @@ ztest_replay_write(ztest_ds_t *zd, lr_write_t *lr, boolean_t byteswap)
 	if (abuf == NULL) {
 		dmu_write(os, lr->lr_foid, offset, length, data, tx);
 	} else {
-		abd_copy_from_buf(abuf->b_data, data, length);
+		abd_copy_from_buf(abuf->b_abd, data, length);
 		dmu_assign_arcbuf(db, offset, abuf, tx);
 	}
 
@@ -4273,17 +4273,17 @@ ztest_dmu_read_write_zcopy(ztest_ds_t *zd, uint64_t id)
 		for (off = bigoff, j = 0; j < s; j++, off += chunksize) {
 			dmu_buf_t *dbt;
 			if (i != 5 || chunksize < (SPA_MINBLOCKSIZE * 2)) {
-				abd_copy_from_buf(bigbuf_arcbufs[j]->b_data,
+				abd_copy_from_buf(bigbuf_arcbufs[j]->b_abd,
 				    (caddr_t)bigbuf + (off - bigoff),
 				    chunksize);
 			} else {
 				abd_copy_from_buf(
-				    bigbuf_arcbufs[2 * j]->b_data,
+				    bigbuf_arcbufs[2 * j]->b_abd,
 				    (caddr_t)bigbuf + (off - bigoff),
 				    chunksize / 2);
 
 				abd_copy_from_buf(
-				    bigbuf_arcbufs[2 * j + 1]->b_data,
+				    bigbuf_arcbufs[2 * j + 1]->b_abd,
 				    (caddr_t)bigbuf + (off - bigoff) +
 				    chunksize / 2, chunksize / 2);
 			}
@@ -5365,10 +5365,10 @@ ztest_ddt_repair(ztest_ds_t *zd, uint64_t id)
 		}
 		ASSERT(db->db_offset == offset);
 		ASSERT(db->db_size == blocksize);
-		ASSERT(ztest_pattern_match(db->db_data, db->db_size, pattern) ||
-		    ztest_pattern_match(db->db_data, db->db_size, 0ULL));
+		ASSERT(ztest_pattern_match(db->db_abd, db->db_size, pattern) ||
+		    ztest_pattern_match(db->db_abd, db->db_size, 0ULL));
 		dmu_buf_will_fill(db, tx);
-		ztest_pattern_set(db->db_data, db->db_size, pattern);
+		ztest_pattern_set(db->db_abd, db->db_size, pattern);
 		dmu_buf_rele(db, FTAG);
 	}
 

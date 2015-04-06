@@ -880,7 +880,7 @@ print_vdev_indirect(vdev_t *vd)
 	dmu_buf_t *bonus;
 	VERIFY0(dmu_bonus_hold(vd->vdev_spa->spa_meta_objset,
 	    vis->vis_mapping_object, FTAG, &bonus));
-	vdev_indirect_mapping_phys_t *vimp = ABD_TO_BUF(bonus->db_data);
+	vdev_indirect_mapping_phys_t *vimp = ABD_TO_BUF(bonus->db_abd);
 
 	ASSERT3U(vimp->vim_count, ==, vis->vis_mapping_count);
 
@@ -1327,10 +1327,10 @@ visit_indirect(spa_t *spa, const dnode_phys_t *dnp,
 		    ZIO_PRIORITY_ASYNC_READ, ZIO_FLAG_CANFAIL, &flags, zb);
 		if (err)
 			return (err);
-		ASSERT(buf->b_data);
+		ASSERT(buf->b_abd);
 
 		/* recursively visit blocks below this */
-		cbp = ABD_TO_BUF(buf->b_data);
+		cbp = ABD_TO_BUF(buf->b_abd);
 		for (i = 0; i < epb; i++, cbp++) {
 			zbookmark_phys_t czb;
 
@@ -1502,7 +1502,7 @@ dump_bptree(objset_t *os, uint64_t obj, char *name)
 		return;
 
 	VERIFY3U(0, ==, dmu_bonus_hold(os, obj, FTAG, &db));
-	bt = ABD_TO_BUF(db->db_data);
+	bt = ABD_TO_BUF(db->db_abd);
 	zdb_nicenum(bt->bt_bytes, bytes);
 	(void) printf("\n    %s: %llu datasets, %s\n",
 	    name, (unsigned long long)(bt->bt_end - bt->bt_begin), bytes);
@@ -1896,7 +1896,7 @@ dump_object(objset_t *os, uint64_t object, int verbosity, int *print_header)
 		if (error)
 			fatal("dmu_bonus_hold(%llu) failed, errno %u",
 			    object, error);
-		bonus = ABD_TO_BUF(db->db_data);
+		bonus = ABD_TO_BUF(db->db_abd);
 		bsize = db->db_size;
 		dn = DB_DNODE((dmu_buf_impl_t *)db);
 	}
@@ -2119,7 +2119,7 @@ dump_config(spa_t *spa)
 	    spa->spa_config_object, FTAG, &db);
 
 	if (error == 0) {
-		nvsize = *(uint64_t *)ABD_TO_BUF(db->db_data);
+		nvsize = *(uint64_t *)ABD_TO_BUF(db->db_abd);
 		dmu_buf_rele(db, FTAG);
 
 		(void) printf("\nMOS Configuration:\n");
@@ -2455,7 +2455,7 @@ zdb_blkptr_done(zio_t *zio)
 	zdb_cb_t *zcb = zio->io_private;
 	zbookmark_phys_t *zb = &zio->io_bookmark;
 
-	abd_free(zio->io_data, zio->io_size);
+	abd_free(zio->io_abd, zio->io_size);
 
 	mutex_enter(&spa->spa_scrub_lock);
 	spa->spa_scrub_inflight--;

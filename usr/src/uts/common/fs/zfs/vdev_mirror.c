@@ -197,12 +197,12 @@ vdev_mirror_scrub_done(zio_t *zio)
 		while ((pio = zio_walk_parents(zio, &zl)) != NULL) {
 			mutex_enter(&pio->io_lock);
 			ASSERT3U(zio->io_size, >=, pio->io_size);
-			abd_copy(pio->io_data, zio->io_data, pio->io_size);
+			abd_copy(pio->io_abd, zio->io_abd, pio->io_size);
 			mutex_exit(&pio->io_lock);
 		}
 		mutex_exit(&zio->io_lock);
 	}
-	abd_free(zio->io_data, zio->io_size);
+	abd_free(zio->io_abd, zio->io_size);
 
 	mc->mc_error = zio->io_error;
 	mc->mc_tried = 1;
@@ -281,7 +281,7 @@ vdev_mirror_io_start(zio_t *zio)
 			for (c = 0; c < mm->mm_children; c++) {
 				abd_t *tmp;
 				mc = &mm->mm_child[c];
-				if (ABD_IS_LINEAR(zio->io_data))
+				if (ABD_IS_LINEAR(zio->io_abd))
 					tmp = abd_alloc_linear(zio->io_size);
 				else
 					tmp = abd_alloc_scatter(zio->io_size);
@@ -313,7 +313,7 @@ vdev_mirror_io_start(zio_t *zio)
 	while (children--) {
 		mc = &mm->mm_child[c];
 		zio_nowait(zio_vdev_child_io(zio, zio->io_bp,
-		    mc->mc_vd, mc->mc_offset, zio->io_data, zio->io_size,
+		    mc->mc_vd, mc->mc_offset, zio->io_abd, zio->io_size,
 		    zio->io_type, zio->io_priority, 0,
 		    vdev_mirror_child_done, mc));
 		c++;
@@ -398,7 +398,7 @@ vdev_mirror_io_done(zio_t *zio)
 		mc = &mm->mm_child[c];
 		zio_vdev_io_redone(zio);
 		zio_nowait(zio_vdev_child_io(zio, zio->io_bp,
-		    mc->mc_vd, mc->mc_offset, zio->io_data, zio->io_size,
+		    mc->mc_vd, mc->mc_offset, zio->io_abd, zio->io_size,
 		    ZIO_TYPE_READ, zio->io_priority, 0,
 		    vdev_mirror_child_done, mc));
 		return;
@@ -439,7 +439,7 @@ vdev_mirror_io_done(zio_t *zio)
 
 			zio_nowait(zio_vdev_child_io(zio, zio->io_bp,
 			    mc->mc_vd, mc->mc_offset,
-			    zio->io_data, zio->io_size,
+			    zio->io_abd, zio->io_size,
 			    ZIO_TYPE_WRITE, ZIO_PRIORITY_ASYNC_WRITE,
 			    ZIO_FLAG_IO_REPAIR | (unexpected_errors ?
 			    ZIO_FLAG_SELF_HEAL : 0), NULL, NULL));

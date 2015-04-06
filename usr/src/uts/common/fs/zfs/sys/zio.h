@@ -348,7 +348,7 @@ typedef zio_t *zio_gang_issue_func_t(zio_t *zio, blkptr_t *bp,
 typedef void zio_transform_func_t(zio_t *zio, struct abd *data, uint64_t size);
 
 typedef struct zio_transform {
-	struct abd		*zt_orig_data;
+	struct abd		*zt_orig_abd;
 	uint64_t		zt_orig_size;
 	uint64_t		zt_bufsize;
 	zio_transform_func_t	*zt_transform;
@@ -408,8 +408,8 @@ struct zio {
 	blkptr_t	io_bp_orig;
 
 	/* Data represented by this I/O */
-	struct abd	*io_data;
-	struct abd	*io_orig_data;
+	struct abd	*io_abd;
+	struct abd	*io_orig_abd;
 	uint64_t	io_size;
 	uint64_t	io_orig_size;
 

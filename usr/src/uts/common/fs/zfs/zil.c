@@ -213,7 +213,7 @@ zil_read_log_block(zilog_t *zilog, const blkptr_t *bp, blkptr_t *nbp, void *dst,
 		cksum.zc_word[ZIL_ZC_SEQ]++;
 
 		if (BP_GET_CHECKSUM(bp) == ZIO_CHECKSUM_ZILOG2) {
-			zil_chain_t *zilc = ABD_TO_BUF(abuf->b_data);
+			zil_chain_t *zilc = ABD_TO_BUF(abuf->b_abd);
 			char *lr = (char *)(zilc + 1);
 			uint64_t len = zilc->zc_nused - sizeof (zil_chain_t);
 
@@ -227,7 +227,7 @@ zil_read_log_block(zilog_t *zilog, const blkptr_t *bp, blkptr_t *nbp, void *dst,
 				*nbp = zilc->zc_next_blk;
 			}
 		} else {
-			char *lr = ABD_TO_BUF(abuf->b_data);
+			char *lr = ABD_TO_BUF(abuf->b_abd);
 			uint64_t size = BP_GET_LSIZE(bp);
 			zil_chain_t *zilc = (zil_chain_t *)(lr + size) - 1;
 
@@ -280,7 +280,7 @@ zil_read_log_data(zilog_t *zilog, const lr_write_t *lr, void *wbuf)
 
 	if (error == 0) {
 		if (wbuf != NULL)
-			abd_copy_to_buf(wbuf, abuf->b_data, arc_buf_size(abuf));
+			abd_copy_to_buf(wbuf, abuf->b_abd, arc_buf_size(abuf));
 		(void) arc_buf_remove_ref(abuf, &abuf);
 	}
 
@@ -857,7 +857,7 @@ zil_lwb_write_done(zio_t *zio)
 	 * one in zil_commit_writer(). zil_sync() will only remove
 	 * the lwb if lwb_buf is null.
 	 */
-	abd_put(zio->io_data);
+	abd_put(zio->io_abd);
 	zio_buf_free(lwb->lwb_buf, lwb->lwb_sz);
 	mutex_enter(&zilog->zl_lock);
 	lwb->lwb_buf = NULL;

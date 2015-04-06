@@ -123,7 +123,7 @@ struct arc_buf {
 	arc_buf_hdr_t		*b_hdr;
 	arc_buf_t		*b_next;
 	kmutex_t		b_evict_lock;
-	struct abd			*b_data;
+	struct abd		*b_abd;
 	arc_evict_func_t	*b_efunc;
 	void			*b_private;
 };

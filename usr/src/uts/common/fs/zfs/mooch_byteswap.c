@@ -290,8 +290,8 @@ mooch_byteswap_determine(dmu_buf_t *oldbuf, dmu_buf_t *newbuf, blkptr_t *bp)
 	}
 
 	bd.bd_records = kmem_alloc(oldbuf->db_size, KM_SLEEP);
-	bd.bd_oldbuf = abd_borrow_buf_copy(oldbuf->db_data, oldbuf->db_size);
-	bd.bd_newbuf = abd_borrow_buf_copy(newbuf->db_data, newbuf->db_size);
+	bd.bd_oldbuf = abd_borrow_buf_copy(oldbuf->db_abd, oldbuf->db_size);
+	bd.bd_newbuf = abd_borrow_buf_copy(newbuf->db_abd, newbuf->db_size);
 	bd.bd_buflen = oldbuf->db_size;
 
 	while (bd.bd_dataoff < oldbuf->db_size) {
@@ -322,8 +322,8 @@ mooch_byteswap_determine(dmu_buf_t *oldbuf, dmu_buf_t *newbuf, blkptr_t *bp)
 		atomic_add_64(&byteswap_blocks_untranslatable, 1);
 	}
 
-	abd_return_buf(oldbuf->db_data, (void *)bd.bd_oldbuf, oldbuf->db_size);
-	abd_return_buf(newbuf->db_data, (void *)bd.bd_newbuf, newbuf->db_size);
+	abd_return_buf(oldbuf->db_abd, (void *)bd.bd_oldbuf, oldbuf->db_size);
+	abd_return_buf(newbuf->db_abd, (void *)bd.bd_newbuf, newbuf->db_size);
 	kmem_free(bd.bd_records, oldbuf->db_size);
 	return (error);
 }
@@ -393,7 +393,7 @@ mooch_byteswap_reconstruct(dmu_buf_t *old, void *outbuf, const blkptr_t *bp)
 	int xor_offset = -1;
 
 	ASSERT(BP_IS_EMBEDDED(bp));
-	VERIFY3P(old->db_data, !=, NULL);
+	VERIFY3P(old->db_abd, !=, NULL);
 	VERIFY3P(outbuf, !=, NULL);
 
 	nrec = BPE_GET_LSIZE(bp);
@@ -401,7 +401,7 @@ mooch_byteswap_reconstruct(dmu_buf_t *old, void *outbuf, const blkptr_t *bp)
 
 	VERIFY0(decode_embedded_bp(bp, records, nrec));
 
-	bcopy(old->db_data, outbuf, old->db_size);
+	bcopy(old->db_abd, outbuf, old->db_size);
 
 	offset = 0;
 	repeat = 1;
