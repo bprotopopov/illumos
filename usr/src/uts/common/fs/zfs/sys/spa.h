@@ -22,6 +22,7 @@
  * Copyright (c) 2005, 2010, Oracle and/or its affiliates. All rights reserved.
  * Copyright (c) 2011, 2014 by Delphix. All rights reserved.
  * Copyright 2011 Nexenta Systems, Inc.  All rights reserved.
+ * Copyright 2013 Saso Kiselkov. All rights reserved.
  */
 
 #ifndef _SYS_SPA_H
@@ -602,14 +603,15 @@ extern void spa_inject_delref(spa_t *spa);
 extern void spa_scan_stat_init(spa_t *spa);
 extern int spa_scan_get_stats(spa_t *spa, pool_scan_stat_t *ps);
 
-#define	SPA_ASYNC_CONFIG_UPDATE	0x01
-#define	SPA_ASYNC_REMOVE	0x02
-#define	SPA_ASYNC_PROBE		0x04
-#define	SPA_ASYNC_RESILVER_DONE	0x08
-#define	SPA_ASYNC_RESILVER	0x10
-#define	SPA_ASYNC_AUTOEXPAND	0x20
-#define	SPA_ASYNC_REMOVE_DONE	0x40
-#define	SPA_ASYNC_REMOVE_STOP	0x80
+#define	SPA_ASYNC_CONFIG_UPDATE		0x01
+#define	SPA_ASYNC_REMOVE		0x02
+#define	SPA_ASYNC_PROBE			0x04
+#define	SPA_ASYNC_RESILVER_DONE		0x08
+#define	SPA_ASYNC_RESILVER		0x10
+#define	SPA_ASYNC_AUTOEXPAND		0x20
+#define	SPA_ASYNC_REMOVE_DONE		0x40
+#define	SPA_ASYNC_REMOVE_STOP		0x80
+#define	SPA_ASYNC_L2CACHE_REBUILD	0x100
 
 /*
  * Controls the behavior of spa_vdev_remove().
