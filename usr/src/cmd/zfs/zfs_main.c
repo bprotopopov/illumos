@@ -75,6 +75,7 @@ static FILE *mnttab_file;
 static char history_str[HIS_MAX_RECORD_LEN];
 static boolean_t log_history = B_TRUE;
 
+static int zfs_do_api(int argc, char **argv);
 static int zfs_do_clone(int argc, char **argv);
 static int zfs_do_create(int argc, char **argv);
 static int zfs_do_destroy(int argc, char **argv);
@@ -121,6 +122,7 @@ _umem_logging_init(void)
 #endif
 
 typedef enum {
+        HELP_API,
 	HELP_CLONE,
 	HELP_CREATE,
 	HELP_DESTROY,
@@ -166,6 +168,7 @@ typedef struct zfs_command {
  * the generic usage message.
  */
 static zfs_command_t command_table[] = {
+        { "api",        zfs_do_api,             HELP_API                },
 	{ "create",	zfs_do_create,		HELP_CREATE		},
 	{ "destroy",	zfs_do_destroy,		HELP_DESTROY		},
 	{ NULL },
@@ -211,6 +214,8 @@ static const char *
 get_usage(zfs_help_t idx)
 {
 	switch (idx) {
+        case HELP_API:
+                return "\tapi\n";
 	case HELP_CLONE:
 		return (gettext("\tclone [-p] [-o property=value] ... "
 		    "<snapshot> <filesystem|volume>\n"));
@@ -579,6 +584,22 @@ finish_progress(char *done)
 	}
 	free(pt_header);
 	pt_header = NULL;
+}
+
+/*
+ * zfs api
+ *
+ * Print a list of zfs command changes in the form
+ * [zfs command] [new-thing] [action]
+ *
+*/
+static int
+zfs_do_api(int argc, char **argv)
+{
+    printf("zfs list -p parameter added\n");
+    printf("zfs receive -s parameter added\n");
+    printf("zfs api . command added\n");
+    return 0;
 }
 
 /*
